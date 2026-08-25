@@ -71,33 +71,20 @@ try {
         throw "smoke: invalid Stop output: $stopOutput"
     }
 
-    $savedArchitecture = $env:PROCESSOR_ARCHITECTURE
-    $savedWowArchitecture = $env:PROCESSOR_ARCHITEW6432
-    try {
-        $env:PROCESSOR_ARCHITECTURE = "MIPS"
-        Remove-Item Env:PROCESSOR_ARCHITEW6432 -ErrorAction SilentlyContinue
-        $unsupportedStdout = Join-Path $tempRoot "unsupported.stdout"
-        $unsupportedStderr = Join-Path $tempRoot "unsupported.stderr"
-        & (Join-Path $hookDir "run.cmd") stop 1> $unsupportedStdout 2> $unsupportedStderr
-        if ($LASTEXITCODE -ne 0) {
-            throw "smoke: unsupported architecture must fail open with exit 0"
-        }
-        if ((Get-Item $unsupportedStdout).Length -ne 0) {
-            throw "smoke: unsupported architecture wrote to stdout"
-        }
-        $unsupportedMessage = (Get-Content -Raw $unsupportedStderr).Trim()
-        if ($unsupportedMessage -ne "codex-next-prompt: unsupported architecture: MIPS") {
-            throw "smoke: invalid unsupported-architecture diagnostic: $unsupportedMessage"
-        }
+    $unsupportedStdout = Join-Path $tempRoot "unsupported.stdout"
+    $unsupportedStderr = Join-Path $tempRoot "unsupported.stderr"
+    $launcher = Join-Path $hookDir "run.cmd"
+    $cmdLine = "set PROCESSOR_ARCHITECTURE=MIPS&&set PROCESSOR_ARCHITEW6432=&&call `"$launcher`" stop"
+    & cmd.exe /d /s /c $cmdLine 1> $unsupportedStdout 2> $unsupportedStderr
+    if ($LASTEXITCODE -ne 0) {
+        throw "smoke: unsupported architecture must fail open with exit 0"
     }
-    finally {
-        $env:PROCESSOR_ARCHITECTURE = $savedArchitecture
-        if ($null -eq $savedWowArchitecture) {
-            Remove-Item Env:PROCESSOR_ARCHITEW6432 -ErrorAction SilentlyContinue
-        }
-        else {
-            $env:PROCESSOR_ARCHITEW6432 = $savedWowArchitecture
-        }
+    if ((Get-Item $unsupportedStdout).Length -ne 0) {
+        throw "smoke: unsupported architecture wrote to stdout"
+    }
+    $unsupportedMessage = (Get-Content -Raw $unsupportedStderr).Trim()
+    if ($unsupportedMessage -ne "codex-next-prompt: unsupported architecture: MIPS") {
+        throw "smoke: invalid unsupported-architecture diagnostic: $unsupportedMessage"
     }
 
     Write-Output "smoke: Windows launcher passed"

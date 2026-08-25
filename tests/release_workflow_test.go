@@ -59,6 +59,29 @@ func Test_ReleaseWorkflow_publishes_verified_native_smoked_tag_artifacts(t *test
 	}
 }
 
+func Test_WindowsSmoke_sets_synthetic_architecture_inside_cmd_process(t *testing.T) {
+	// Given
+	scriptPath := filepath.Join("..", "tests", "smoke-windows.ps1")
+	data, err := os.ReadFile(scriptPath)
+	if err != nil {
+		t.Fatalf("Given read Windows smoke script: %v", err)
+	}
+	script := string(data)
+
+	// When
+	requiredTokens := []string{
+		`set PROCESSOR_ARCHITECTURE=MIPS&&set PROCESSOR_ARCHITEW6432=`,
+		`cmd.exe /d /s /c $cmdLine`,
+	}
+
+	// Then
+	for _, token := range requiredTokens {
+		if !strings.Contains(script, token) {
+			t.Errorf("Then Windows smoke script must contain structural token %q", token)
+		}
+	}
+}
+
 func Test_ReleaseTagVerifier_binds_single_VALID_SIGNATURE_to_expected_primary_key(t *testing.T) {
 	// Given
 	scriptPath := filepath.Join("..", "scripts", "verify-release-tag.sh")
