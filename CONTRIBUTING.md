@@ -26,7 +26,11 @@ make check
 Do not hide failures with broad skips or ignored errors. Changes that affect
 the public contract should explain the behavior and update `CHANGELOG.md`.
 Release tags must use strict `vMAJOR.MINOR.PATCH`-style versions, be annotated,
-and be signed by a key available to the GitHub Actions runner for `git verify-tag`.
+and be signed by the public key in
+[`RELEASE_SIGNING_KEY.asc`](RELEASE_SIGNING_KEY.asc), fingerprint
+`BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77`. Public key rotation requires a
+reviewed code change that updates the key and expected fingerprint together.
+Never commit a private signing key.
 
 ## Pull Requests
 

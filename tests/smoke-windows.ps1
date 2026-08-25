@@ -6,6 +6,19 @@ $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("codex-next-prompt-smok
 
 try {
 	if ($null -ne $archivePath) {
+		$archive = [System.IO.Compression.ZipFile]::OpenRead($archivePath)
+		try {
+			foreach ($entry in $archive.Entries) {
+				$segments = $entry.FullName.Replace("\", "/").Split("/")
+				$unixMode = ($entry.ExternalAttributes -shr 16) -band 0xF000
+				if ([System.IO.Path]::IsPathRooted($entry.FullName) -or $segments -contains ".." -or $unixMode -eq 0xA000) {
+					throw "smoke: unsafe archive entry: $($entry.FullName)"
+				}
+			}
+		}
+		finally {
+			$archive.Dispose()
+		}
 		Expand-Archive -Path $archivePath -DestinationPath $tempRoot
 		$releaseRoots = @(Get-ChildItem -Path $tempRoot -Directory)
 		if ($releaseRoots.Count -ne 1) {

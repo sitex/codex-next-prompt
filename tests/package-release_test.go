@@ -195,7 +195,7 @@ func assertReleaseEntries(t *testing.T, entries map[string]archiveEntry, goos, g
 		if entry.size == 0 {
 			t.Errorf("Then archive file %q must not be empty", path)
 		}
-		for _, forbidden := range []string{".git/", "internal/", "cmd/", "tests/", "testdata/", "thoughts/", "README.md", "go.mod", "go.sum"} {
+		for _, forbidden := range []string{".git/", "internal/", "cmd/", "tests/", "testdata/", "thoughts/", "README.md", "RELEASE_SIGNING_KEY.asc", "go.mod", "go.sum"} {
 			if strings.Contains(path, forbidden) {
 				t.Errorf("Then archive must not include source/private path %q", path)
 			}

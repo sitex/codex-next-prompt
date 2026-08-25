@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify:
@@ -15,25 +15,33 @@ jobs:
 
     steps:
       - name: Check out tagged source
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Verify tag identity and version
         shell: bash
         run: |
           set -euo pipefail
           test "$(git cat-file -t "$GITHUB_REF_NAME")" = tag
+          export GNUPGHOME="$RUNNER_TEMP/release-gnupg"
+          mkdir -m 700 "$GNUPGHOME"
+          gpg --batch --import RELEASE_SIGNING_KEY.asc
+          imported_fingerprint=$(gpg --batch --with-colons --fingerprint | awk -F: '$1 == "fpr" {print $10; exit}')
+          test "$imported_fingerprint" = BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77
           git verify-tag "$GITHUB_REF_NAME"
           tag_commit=$(git rev-list -n 1 "$GITHUB_REF_NAME")
           test "$tag_commit" = "$GITHUB_SHA"
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          git merge-base --is-ancestor "$tag_commit" origin/main
           version=${GITHUB_REF_NAME#v}
           test "$GITHUB_REF_NAME" = "v$version"
           printf '%s\n' "$version" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?(\+[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?$'
           printf 'RELEASE_VERSION=%s\n' "$version" >>"$GITHUB_ENV"
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version: '1.25.x'
           cache: false
@@ -78,9 +86,10 @@ jobs:
 
     steps:
       - name: Check out tagged source
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Resolve release version
         shell: bash
@@ -90,7 +99,7 @@ jobs:
           printf 'RELEASE_VERSION=%s\n' "$version" >>"$GITHUB_ENV"
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version: '1.25.x'
           cache: false
@@ -103,7 +112,7 @@ jobs:
         run: scripts/package-release.sh "$RELEASE_VERSION" "$TARGET_GOOS" "$TARGET_GOARCH"
 
       - name: Upload tested target archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-${{ matrix.goos }}-${{ matrix.goarch }}
           path: |
@@ -129,10 +138,12 @@ jobs:
 
     steps:
       - name: Check out smoke test
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
       - name: Download Windows archive
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: release-windows-${{ matrix.goarch }}
           path: dist
@@ -143,16 +154,20 @@ jobs:
 
   publish:
     name: Publish immutable GitHub release
+    permissions:
+      contents: write
     needs: [package, smoke-windows]
     if: always() && needs.package.result == 'success' && needs.smoke-windows.result == 'success'
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out release notes
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
 
       - name: Download tested release archives
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           pattern: release-*
           path: dist
@@ -164,10 +179,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+          response=$(mktemp)
+          if gh api -i "repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME" >"$response" 2>&1; then
+            api_exit=0
+          else
+            api_exit=$?
+          fi
+          http_status=$(awk 'NR == 1 {print $2}' "$response")
+          case "$http_status" in
+          404)
+            ;;
+          200)
             printf '%s\n' "release already exists: $GITHUB_REF_NAME" >&2
             exit 1
-          fi
+            ;;
+          *)
+            printf '%s\n' "release lookup failed (status ${http_status:-none}, exit $api_exit)" >&2
+            exit 1
+            ;;
+          esac
 
       - name: Publish release
         shell: bash

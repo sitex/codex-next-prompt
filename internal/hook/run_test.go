@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -125,6 +126,27 @@ func Test_Run_reports_malformed_input_only_on_stderr(t *testing.T) {
 		t.Fatalf("Then stdout = %q, want empty protocol stream", result.stdout)
 	}
 	if result.stderr == "" {
+		t.Fatal("Then stderr must contain a concise diagnostic")
+	}
+}
+
+func Test_Run_rejects_oversized_input_without_corrupting_stdout(t *testing.T) {
+	// Given
+	input := `{"hook_event_name":"Stop","last_assistant_message":"` + strings.Repeat("a", 4*1024*1024) + `"}`
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	// When
+	exitCode := Run("stop", Streams{Stdin: strings.NewReader(input), Stdout: &stdout, Stderr: &stderr})
+
+	// Then
+	if exitCode != 0 {
+		t.Fatalf("Then exit code = %d, want fail-open 0", exitCode)
+	}
+	if stdout.Len() != 0 {
+		t.Fatalf("Then stdout = %q, want empty protocol stream", stdout.String())
+	}
+	if stderr.Len() == 0 {
 		t.Fatal("Then stderr must contain a concise diagnostic")
 	}
 }

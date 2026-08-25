@@ -10,6 +10,19 @@ archive_path=$1
 temp_root=$(mktemp -d "${TMPDIR:-/tmp}/codex-next-prompt-archive-smoke.XXXXXX")
 trap 'rm -rf "$temp_root"' EXIT HUP INT TERM
 
+tar -tzf "$archive_path" | while IFS= read -r entry; do
+	case "$entry" in
+	/* | ../* | */../* | */..)
+		printf '%s\n' "archive smoke: unsafe archive entry: $entry" >&2
+		exit 1
+		;;
+	esac
+done
+if LC_ALL=C tar -tvzf "$archive_path" | grep -Eq '^[lh]'; then
+	printf '%s\n' 'archive smoke: unsafe archive link entry' >&2
+	exit 1
+fi
+
 tar -xzf "$archive_path" -C "$temp_root"
 plugin_root=
 for candidate in "$temp_root"/*; do

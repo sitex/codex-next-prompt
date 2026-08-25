@@ -31,7 +31,7 @@ arm64 | aarch64)
 	;;
 esac
 
-plugin_root="$temp_root/plugin"
+plugin_root="$temp_root/plugin [qa] *"
 binary_dir="$plugin_root/bin/$os-$arch"
 mkdir -p "$binary_dir" "$plugin_root/hooks" "$temp_root/work/subdirectory"
 cp "$repo_root/hooks/run" "$plugin_root/hooks/run"
@@ -41,7 +41,7 @@ GOTOOLCHAIN=auto go build -buildvcs=false -o "$binary_dir/codex-next-prompt" "$r
 
 session_output=$(
 	cd "$temp_root/work/subdirectory"
-	printf '%s\n' '{"hook_event_name":"SessionStart","source":"startup"}' | "$plugin_root/hooks/run" session-start
+	PLUGIN_ROOT=$plugin_root sh -c 'printf '\''%s\n'\'' '\''{"hook_event_name":"SessionStart","source":"startup"}'\'' | "${PLUGIN_ROOT}/hooks/run" session-start'
 )
 case "$session_output" in
 *'"hookEventName":"SessionStart"'*'"additionalContext":"'*'Suggested next prompt:'*)
@@ -54,7 +54,7 @@ esac
 
 stop_output=$(
 	cd "$temp_root/work/subdirectory"
-	printf '%s\n' '{"hook_event_name":"Stop","last_assistant_message":"Suggested next prompt:"}' | "$plugin_root/hooks/run" stop
+	PLUGIN_ROOT=$plugin_root sh -c 'printf '\''%s\n'\'' '\''{"hook_event_name":"Stop","last_assistant_message":"Suggested next prompt:"}'\'' | "${PLUGIN_ROOT}/hooks/run" stop'
 )
 case "$stop_output" in
 '{"systemMessage":"codex-next-prompt: invalid Suggested next prompt line"}')

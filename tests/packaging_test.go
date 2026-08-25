@@ -140,7 +140,7 @@ func singleHookCommand(t *testing.T, manifest hookManifest, event string) regist
 func assertCommand(t *testing.T, command hookCommand, subcommand string) {
 	t.Helper()
 
-	wantPOSIX := "${PLUGIN_ROOT}/hooks/run " + subcommand
+	wantPOSIX := `"${PLUGIN_ROOT}/hooks/run" ` + subcommand
 	if command.Type != "command" || command.Command != wantPOSIX {
 		t.Errorf("Then %s command = %#v, want type command and %q", subcommand, command, wantPOSIX)
 	}

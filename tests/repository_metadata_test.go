@@ -65,6 +65,42 @@ func Test_RepositoryMetadata_local_Markdown_links_resolve(t *testing.T) {
 	}
 }
 
+func Test_RepositoryMetadata_documents_release_public_key_and_rotation_contract(t *testing.T) {
+	// Given
+	repoRoot := repositoryRoot(t)
+	paths := []string{"README.md", "CONTRIBUTING.md"}
+
+	for _, path := range paths {
+		data, err := os.ReadFile(filepath.Join(repoRoot, path))
+		if err != nil {
+			t.Fatalf("Given read %s: %v", path, err)
+		}
+
+		// When/Then
+		for _, token := range []string{"RELEASE_SIGNING_KEY.asc", "BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77"} {
+			if !strings.Contains(string(data), token) {
+				t.Errorf("Then %s must contain release verification token %q", path, token)
+			}
+		}
+	}
+}
+
+func Test_RepositoryMetadata_release_public_key_is_present(t *testing.T) {
+	// Given
+	keyPath := filepath.Join(repositoryRoot(t), "RELEASE_SIGNING_KEY.asc")
+
+	// When
+	data, err := os.ReadFile(keyPath)
+
+	// Then
+	if err != nil {
+		t.Fatalf("Then public release key must be present: %v", err)
+	}
+	if !strings.Contains(string(data), "-----BEGIN PGP PUBLIC KEY BLOCK-----") {
+		t.Fatal("Then release key must be an armored public key")
+	}
+}
+
 func trackedFiles(t *testing.T, repoRoot, pattern string) []string {
 	t.Helper()
 	command := exec.Command("git", "ls-files", pattern)

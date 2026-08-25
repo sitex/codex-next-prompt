@@ -113,7 +113,12 @@ Each archive is a self-contained local marketplace root; the repository copy of
 not a source-checkout installation path.
 GitHub release automation builds the supported platform matrix from a version
 tag. Release tags must be annotated and signed because CI runs `git verify-tag`
-and confirms the tag resolves to the workflow commit before packaging.
+and confirms the tag resolves to the workflow commit before packaging. CI
+imports the repository's public [`RELEASE_SIGNING_KEY.asc`](RELEASE_SIGNING_KEY.asc)
+and requires fingerprint `BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77`.
+Rotating this public key or fingerprint requires a reviewed code change; private
+signing keys must never be committed. The public key is source-only and is not
+included in plugin runtime release archives.
 Maintainers should run `make check` before creating a release tag.
 
 ## Contributing

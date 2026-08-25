@@ -18,7 +18,13 @@ func Test_ReleaseWorkflow_publishes_verified_native_smoked_tag_artifacts(t *test
 
 	// When
 	requiredTokens := []string{
+		"permissions:\n  contents: read",
+		"publish:\n    name: Publish immutable GitHub release\n    permissions:\n      contents: write",
+		"gpg --batch --import RELEASE_SIGNING_KEY.asc",
+		"BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77",
 		"git verify-tag \"$GITHUB_REF_NAME\"",
+		"git fetch --no-tags origin main",
+		"git merge-base --is-ancestor \"$tag_commit\" origin/main",
 		"git rev-list -n 1 \"$GITHUB_REF_NAME\"",
 		"RELEASE_VERSION=%s",
 		"macos-15-intel",
@@ -28,7 +34,11 @@ func Test_ReleaseWorkflow_publishes_verified_native_smoked_tag_artifacts(t *test
 		"smoke-windows.ps1",
 		"smoke-windows:",
 		"needs: [package, smoke-windows]",
-		"gh release view \"$GITHUB_REF_NAME\"",
+		"gh api -i \"repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME\"",
+		"http_status=",
+		"case \"$http_status\" in",
+		"404)",
+		"200)",
 		"--notes-file RELEASE_NOTES.md",
 	}
 	forbiddenTokens := []string{"workflow_dispatch", "--clobber", "--generate-notes", "${{ steps.version.outputs.version }}"}
@@ -42,6 +52,39 @@ func Test_ReleaseWorkflow_publishes_verified_native_smoked_tag_artifacts(t *test
 	for _, token := range forbiddenTokens {
 		if strings.Contains(workflow, token) {
 			t.Errorf("Then release workflow must omit structural token %q", token)
+		}
+	}
+}
+
+func Test_Workflows_pin_actions_and_disable_checkout_credentials(t *testing.T) {
+	// Given
+	workflowPaths := []string{
+		filepath.Join("..", ".github", "workflows", "ci.yml"),
+		filepath.Join("..", ".github", "workflows", "release.yml"),
+	}
+	pins := map[string]string{
+		"actions/checkout@":          "actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+		"actions/setup-go@":          "actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16",
+		"actions/upload-artifact@":   "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+		"actions/download-artifact@": "actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0",
+	}
+
+	for _, workflowPath := range workflowPaths {
+		workflowData, err := os.ReadFile(workflowPath)
+		if err != nil {
+			t.Fatalf("Given read workflow %q: %v", workflowPath, err)
+		}
+		workflow := string(workflowData)
+
+		// When/Then
+		for actionPrefix, pinnedAction := range pins {
+			if strings.Count(workflow, actionPrefix) != strings.Count(workflow, pinnedAction) {
+				t.Errorf("Then every %s use in %s must use reviewed SHA", actionPrefix, workflowPath)
+			}
+		}
+		checkoutCount := strings.Count(workflow, "actions/checkout@")
+		if strings.Count(workflow, "persist-credentials: false") != checkoutCount {
+			t.Errorf("Then %s checkout credential guards = %d, want %d", workflowPath, strings.Count(workflow, "persist-credentials: false"), checkoutCount)
 		}
 	}
 }

@@ -28,3 +28,7 @@ All notable changes to this project will be documented in this file.
 - Encode SessionStart no-tools and no-composer constraints structurally, decode
   the Stop hook activity field, and validate repository JSON and local Markdown
   links in the standard test suite.
+- Harden release provenance with least-privilege workflow permissions, immutable
+  action pins, repository-provisioned tag verification, main-branch ancestry
+  checks, status-aware release lookup, bounded hook input, quoted plugin paths,
+  and archive extraction preflight.
