@@ -152,7 +152,12 @@ jobs:
 
       - name: Run extracted Windows launcher smoke
         shell: pwsh
-        run: tests/smoke-windows.ps1 (Get-ChildItem dist/*.zip -File -Single)
+        run: |
+          $archives = @(Get-ChildItem dist/*.zip -File)
+          if ($archives.Count -ne 1) {
+            throw "expected exactly one Windows release archive, found $($archives.Count)"
+          }
+          tests/smoke-windows.ps1 $archives[0].FullName
 
   publish:
     name: Publish immutable GitHub release

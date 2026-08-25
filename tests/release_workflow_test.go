@@ -32,6 +32,9 @@ func Test_ReleaseWorkflow_publishes_verified_native_smoked_tag_artifacts(t *test
 		"ubuntu-24.04-arm",
 		"scripts/package-release.sh \"$RELEASE_VERSION\"",
 		"smoke-windows.ps1",
+		`$archives = @(Get-ChildItem dist/*.zip -File)`,
+		`if ($archives.Count -ne 1)`,
+		`tests/smoke-windows.ps1 $archives[0].FullName`,
 		"smoke-windows:",
 		"needs: [package, smoke-windows]",
 		"gh api -i \"repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME\"",
@@ -41,7 +44,7 @@ func Test_ReleaseWorkflow_publishes_verified_native_smoked_tag_artifacts(t *test
 		"200)",
 		"--notes-file RELEASE_NOTES.md",
 	}
-	forbiddenTokens := []string{"workflow_dispatch", "--clobber", "--generate-notes", "${{ steps.version.outputs.version }}"}
+	forbiddenTokens := []string{"workflow_dispatch", "--clobber", "--generate-notes", "${{ steps.version.outputs.version }}", "-Single"}
 
 	// Then
 	for _, token := range requiredTokens {
