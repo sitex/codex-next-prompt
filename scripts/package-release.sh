@@ -47,8 +47,9 @@ trap 'rm -rf "$temp_root"' EXIT HUP INT TERM
 release_name="codex-next-prompt-$version"
 stage_root="$temp_root/$release_name"
 target_dir="$stage_root/bin/$goos-$goarch"
-mkdir -p "$stage_root/.codex-plugin" "$stage_root/hooks" "$target_dir" "$dist_dir"
+mkdir -p "$stage_root/.agents/plugins" "$stage_root/.codex-plugin" "$stage_root/hooks" "$target_dir" "$dist_dir"
 
+cp "$repo_root/.agents/plugins/marketplace.json" "$stage_root/.agents/plugins/marketplace.json"
 sed 's/"version": "[^"]*"/"version": "'"$version"'"/' \
 	"$repo_root/.codex-plugin/plugin.json" >"$stage_root/.codex-plugin/plugin.json"
 cp "$repo_root/hooks/hooks.json" "$stage_root/hooks/hooks.json"
@@ -72,6 +73,7 @@ if test "$goos" != windows; then
 fi
 
 expected_files=$(cat <<EOF
+$release_name/.agents/plugins/marketplace.json
 $release_name/.codex-plugin/plugin.json
 $release_name/bin/$goos-$goarch/$binary_name
 $release_name/hooks/hooks.json

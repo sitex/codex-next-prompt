@@ -181,6 +181,7 @@ func assertReleaseEntries(t *testing.T, entries map[string]archiveEntry, goos, g
 		binaryName += ".exe"
 	}
 	want := map[string]bool{
+		root + ".agents/plugins/marketplace.json":              true,
 		root + ".codex-plugin/plugin.json":                     true,
 		root + "hooks/hooks.json":                              true,
 		root + "hooks/run":                                     true,
