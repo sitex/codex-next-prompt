@@ -65,6 +65,26 @@ func Test_RepositoryMetadata_local_Markdown_links_resolve(t *testing.T) {
 	}
 }
 
+func Test_RepositoryMetadata_enforces_LF_for_Go_and_shell_sources(t *testing.T) {
+	// Given
+	repoRoot := repositoryRoot(t)
+	attributesPath := filepath.Join(repoRoot, ".gitattributes")
+
+	// When
+	data, err := os.ReadFile(attributesPath)
+
+	// Then
+	if err != nil {
+		t.Fatalf("Then read .gitattributes: %v", err)
+	}
+	attributes := string(data)
+	for _, rule := range []string{"*.go text eol=lf", "*.sh text eol=lf", "Makefile text eol=lf"} {
+		if !strings.Contains(attributes, rule) {
+			t.Errorf("Then .gitattributes must contain %q", rule)
+		}
+	}
+}
+
 func Test_RepositoryMetadata_documents_release_public_key_and_rotation_contract(t *testing.T) {
 	// Given
 	repoRoot := repositoryRoot(t)
