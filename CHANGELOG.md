@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
   prompt and mandatory interactive hook review.
 - Fetch the exact annotated tag ref before release signature verification.
 - Select the single Windows archive explicitly before native release smoke.
+- Set synthetic Windows architecture inside the same `cmd.exe` launcher test.
 - Harden release builds for linked worktrees, verify signed tags against the
   workflow commit, smoke extracted archives on native runners, and refuse to
   replace existing release assets.
