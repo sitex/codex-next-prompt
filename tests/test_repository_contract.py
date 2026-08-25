@@ -127,7 +127,7 @@ class TestRepositoryContract(unittest.TestCase):
         for target in ("test:", "package:", "check:", "clean:"):
             self.assertIn(target, makefile)
         self.assertIn("python3 -m unittest discover", makefile)
-        self.assertIn("python3 scripts/package-release.py", makefile)
+        self.assertIn("python3 scripts/package_release.py", makefile)
         self.assertIn("__pycache__", makefile)
         self.assertNotIn("go ", makefile.lower())
 
@@ -144,7 +144,7 @@ class TestRepositoryContract(unittest.TestCase):
             "actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1",
             workflow,
         )
-        self.assertIn("run: make test", workflow)
+        self.assertIn("run: make check", workflow)
         for old_surface in ("setup-go", "matrix:", "macos", "windows", "go test"):
             self.assertNotIn(old_surface, workflow.lower())
 

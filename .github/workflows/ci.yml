@@ -25,5 +25,5 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Run tests
-        run: make test
+      - name: Run checks
+        run: make check
