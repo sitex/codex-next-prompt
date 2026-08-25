@@ -4,6 +4,10 @@ These examples describe the Codex Next Prompt 0.2.0 standalone skill. Invoke `$n
 result is ready-to-send prompt text, and none of the results are executed by the
 skill.
 
+Install it at `${CODEX_HOME:-$HOME/.codex}/skills/next`. On Codex 0.149.1,
+explicit activation is description-driven: type `$next` so the frontmatter
+trigger can select the skill. No automatic footer is added.
+
 ## One clear action
 
 Context: the implementation is complete, but focused tests haven't run.

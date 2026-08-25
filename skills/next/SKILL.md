@@ -1,6 +1,6 @@
 ---
 name: next
-description: Use when the user explicitly invokes $next and wants a ready-to-send next prompt from the current conversation.
+description: Use only when the user's latest message contains the literal token $next and requests a ready-to-send prompt from the current conversation. Do not use for ordinary questions such as "what should I do next?" without that token.
 ---
 
 # Next

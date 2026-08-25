@@ -26,7 +26,6 @@ SEMVER: Final = re.compile(
 )
 PAYLOAD: Final = (
     (Path("skills/next/SKILL.md"), Path("next/SKILL.md")),
-    (Path("skills/next/agents/openai.yaml"), Path("next/agents/openai.yaml")),
 )
 ZIP_TIMESTAMP: Final = (1980, 1, 1, 0, 0, 0)
 FILE_MODE: Final = stat.S_IFREG | 0o644

@@ -30,38 +30,6 @@ def parse_frontmatter(document: str) -> tuple[dict[str, str], str]:
     return fields, "\n".join(lines[closing_index + 1 :])
 
 
-def parse_scalar_yaml(document: str) -> dict[str, str | bool]:
-    fields: dict[str, str | bool] = {}
-    section = ""
-    for line in document.splitlines():
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-
-        indent = len(line) - len(line.lstrip(" "))
-        key, separator, raw_value = stripped.partition(":")
-        if not separator:
-            raise AssertionError(f"unsupported openai.yaml line: {line!r}")
-        if not raw_value.strip():
-            if indent != 0:
-                raise AssertionError(f"unsupported nested section: {line!r}")
-            section = key
-            fields[section] = ""
-            continue
-
-        path = f"{section}.{key}" if indent else key
-        if indent == 0:
-            section = ""
-        value = raw_value.strip().strip("\"'")
-        if value == "true":
-            fields[path] = True
-        elif value == "false":
-            fields[path] = False
-        else:
-            fields[path] = value
-    return fields
-
-
 def read_required(path: Path) -> str:
     if not path.is_file():
         raise AssertionError(f"missing {path.relative_to(ROOT)}")
@@ -80,9 +48,15 @@ def parse_contract(body: str) -> element_tree.Element:
 
 
 class TestSkillContract(unittest.TestCase):
-    def test_skill_artifacts_exist_when_v02_contract_is_added(self) -> None:
+    def test_standalone_skill_contains_only_skill_markdown(self) -> None:
         self.assertTrue(SKILL_PATH.is_file(), f"missing {SKILL_PATH.relative_to(ROOT)}")
-        self.assertTrue(OPENAI_PATH.is_file(), f"missing {OPENAI_PATH.relative_to(ROOT)}")
+        self.assertFalse(OPENAI_PATH.exists(), f"remove {OPENAI_PATH.relative_to(ROOT)}")
+        skill_files = tuple(
+            path.relative_to(SKILL_PATH.parent).as_posix()
+            for path in sorted(SKILL_PATH.parent.rglob("*"))
+            if path.is_file()
+        )
+        self.assertEqual(skill_files, ("SKILL.md",))
 
     def test_frontmatter_routes_only_explicit_next(self) -> None:
         fields, _body = parse_frontmatter(read_required(SKILL_PATH))
@@ -90,17 +64,12 @@ class TestSkillContract(unittest.TestCase):
         self.assertEqual(fields.get("name"), "next")
         description = fields.get("description", "").lower()
         self.assertIn("$next", description)
+        self.assertIn("literal", description)
+        self.assertIn("only", description)
+        self.assertIn("do not use", description)
+        self.assertIn("what should i do next", description)
         self.assertIn("current conversation", description)
         self.assertNotIn("never execute", description)
-
-    def test_openai_metadata_disables_implicit_invocation_and_dependencies(self) -> None:
-        fields = parse_scalar_yaml(read_required(OPENAI_PATH))
-
-        self.assertTrue(fields.get("interface.display_name"))
-        self.assertTrue(fields.get("interface.short_description"))
-        self.assertTrue(fields.get("interface.default_prompt"))
-        self.assertIs(fields.get("policy.allow_implicit_invocation"), False)
-        self.assertFalse(any(path == "dependencies" or path.startswith("dependencies.") for path in fields))
 
     def test_body_structurally_limits_inputs_and_side_effects(self) -> None:
         _fields, body = parse_frontmatter(read_required(SKILL_PATH))

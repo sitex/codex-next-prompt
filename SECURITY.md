@@ -7,9 +7,15 @@ standalone skill whose public action is explicit `$next` invocation.
 
 ## Threat Surface
 
-Codex Next Prompt is instruction-only. The release contains only `next/SKILL.md`
-and `next/agents/openai.yaml`, with no executable runtime. `$next` receives only the current
-conversation context and returns prompt text. It doesn't execute the result.
+Codex Next Prompt is instruction-only. The release contains only `next/SKILL.md`,
+installed at `${CODEX_HOME:-$HOME/.codex}/skills/next`, with no executable
+runtime. `$next` receives only the current conversation context and returns prompt
+text. It doesn't execute the result.
+
+For Codex 0.149.1, adding agent policy metadata that disables implicit invocation
+hides the skill from the explicit catalog. The supported standalone skill relies
+on the user's `$next` input and its frontmatter description, with no automatic
+footer.
 
 Security reports are especially relevant if the package gains unexpected
 automatic invocation, network access, persistence, conversation-record access,

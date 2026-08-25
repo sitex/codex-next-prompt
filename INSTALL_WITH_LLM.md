@@ -3,16 +3,18 @@
 This procedure installs Codex Next Prompt as a standalone user skill. Its only
 invocation is explicit `$next`.
 
-## Recommended Installation
+## Recommended Installation After Release
 
-Use `$skill-installer` with this GitHub repository path:
+After v0.2.0 is published, use `$skill-installer` with this immutable release
+tree:
 
 ```text
-https://github.com/sitex/codex-next-prompt/tree/main/skills/next
+https://github.com/sitex/codex-next-prompt/tree/v0.2.0/skills/next
 ```
 
-Ask it to install the `next` skill into the current user's Codex skill directory,
-then start a new session.
+Ask it to install the `next` skill to
+`${CODEX_HOME:-$HOME/.codex}/skills/next`, then start a new session. Do not
+install from mutable `main`.
 
 ## Manual Release Installation
 
@@ -24,16 +26,14 @@ then start a new session.
 
 ```text
 codex-next-prompt-0.2.0/next/SKILL.md
-codex-next-prompt-0.2.0/next/agents/openai.yaml
 ```
 
 4. Extract the ZIP only after the checks pass.
 5. Resolve the destination as `${CODEX_HOME:-$HOME/.codex}/skills/next`.
 6. Refuse to overwrite an existing destination without first identifying whether
    it is an old installation and obtaining approval to replace that exact path.
-7. Copy the extracted `next` directory to the destination. The final paths must
-   be `$CODEX_HOME/skills/next/SKILL.md` and
-   `$CODEX_HOME/skills/next/agents/openai.yaml`.
+7. Copy the extracted `next` directory to the destination. The final file must
+   be `${CODEX_HOME:-$HOME/.codex}/skills/next/SKILL.md`.
 8. Start a new Codex session.
 
 Do not build from source, request credentials, read conversation records, weaken
@@ -45,6 +45,14 @@ The 0.1 release used an experimental plugin and local marketplace. Remove both
 old registrations before installing the 0.2.0 standalone skill. Delete an old
 extracted release or skill directory only after showing and validating its exact
 resolved path. Never delete a parent or wildcard path.
+
+## Codex 0.149.1 Compatibility
+
+Install only `SKILL.md`. Runtime testing showed that agent policy metadata which
+disables implicit invocation hides the skill from the explicit catalog in Codex
+0.149.1. The supported trigger is description-driven: the user types `$next`, and
+the frontmatter description declares that explicit intent. There is no automatic
+footer.
 
 ## Verification
 
@@ -66,6 +74,6 @@ automatic invocation, or hook.
 
 ## Uninstall
 
-Remove only `$CODEX_HOME/skills/next`, using `$HOME/.codex` when `CODEX_HOME` is
-unset. Report the selected version, checksum result, inspected payload,
+Remove only `${CODEX_HOME:-$HOME/.codex}/skills/next`. Report the selected
+version, checksum result, inspected payload,
 destination path, restart status, and `$next` verification result.

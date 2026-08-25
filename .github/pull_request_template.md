@@ -16,10 +16,13 @@ The product is a standalone skill invoked as `$next`.
 
 - [ ] Added or updated a focused failing test before the implementation change.
 - [ ] Tests assert routing or repository contract terms, not prose snapshots.
-- [ ] Package changes keep one portable ZIP containing exactly `next/SKILL.md`
-      and `next/agents/openai.yaml`, checksum verification, and safe paths.
-- [ ] Installation remains available through `$skill-installer` or the manual
-      `$CODEX_HOME/skills/next` destination.
+- [ ] Package changes keep one portable ZIP containing exactly `next/SKILL.md`,
+      with checksum verification and safe paths.
+- [ ] Codex 0.149.1 discovery remains description-driven when the user types
+      `$next`, with no agent policy metadata or automatic footer.
+- [ ] Installation remains available after release through `$skill-installer`
+      from `tree/v0.2.0/skills/next` or manually at
+      `${CODEX_HOME:-$HOME/.codex}/skills/next`.
 - [ ] Contains no credentials, private keys, user data, generated ZIP files, or
       unrelated changes.
 

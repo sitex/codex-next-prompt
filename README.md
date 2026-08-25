@@ -26,15 +26,17 @@ See [EXAMPLES.md](EXAMPLES.md) for more scenarios.
 
 ## Install 0.2.0
 
-### Recommended: `$skill-installer`
+### Recommended after release: `$skill-installer`
 
-In Codex, ask `$skill-installer` to install the skill from this repository path:
+After v0.2.0 is published, ask `$skill-installer` to install the skill from this
+immutable release tree:
 
 ```text
-https://github.com/sitex/codex-next-prompt/tree/main/skills/next
+https://github.com/sitex/codex-next-prompt/tree/v0.2.0/skills/next
 ```
 
-Start a new Codex session after installation.
+Do not install from mutable `main`. Install to
+`${CODEX_HOME:-$HOME/.codex}/skills/next`, then start a new Codex session.
 
 ### Manual: release ZIP
 
@@ -58,7 +60,6 @@ The ZIP contains exactly:
 
 ```text
 codex-next-prompt-0.2.0/next/SKILL.md
-codex-next-prompt-0.2.0/next/agents/openai.yaml
 ```
 
 Copy the extracted `next` directory to the user skill directory:
@@ -88,13 +89,17 @@ codex debug prompt-input '$next'
 You can also send `$next` in that session and confirm that the response is prompt
 text only. There is no custom slash command.
 
+Codex 0.149.1 compatibility requires the installed directory to contain only
+`SKILL.md`. Agent policy metadata that disables implicit invocation also hides
+the skill from the explicit catalog in this version. Explicit activation relies
+on the user typing `$next` and the skill frontmatter description matching that
+intent. It does not append an automatic footer.
+
 Uninstall the standalone skill by removing only:
 
 ```text
-$CODEX_HOME/skills/next
+${CODEX_HOME:-$HOME/.codex}/skills/next
 ```
-
-When `CODEX_HOME` is unset, the default is `$HOME/.codex`.
 
 ## Boundaries
 
@@ -113,8 +118,8 @@ make clean
 ```
 
 The top-level `VERSION` file is authoritative. Packaging produces one
-deterministic ZIP with exactly the two standalone skill files and one SHA-256
-file. Release tags use `vMAJOR.MINOR.PATCH`, are annotated and signed, and must
+deterministic ZIP with exactly `next/SKILL.md` and one SHA-256 file. Release tags
+use `vMAJOR.MINOR.PATCH`, are annotated and signed, and must
 match `VERSION`. The workflow verifies the approved public signing key before
 publishing.
 

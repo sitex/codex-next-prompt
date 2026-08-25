@@ -9,6 +9,8 @@ conversation.
 - Keep the repository instruction-only and local-only.
 - Preserve explicit `$next` invocation. Don't add automatic invocation or an
   automatic response footer.
+- Preserve Codex 0.149.1 discovery: the standalone skill directory contains only
+  `SKILL.md`, and its frontmatter description carries the `$next` trigger.
 - Use only current conversation context. Don't add network access, persistence,
   conversation-record reads, model API calls, executable runtime code, or prompt
   execution.
@@ -39,9 +41,10 @@ ignored errors, or a weaker assertion.
 
 Update current documentation and `CHANGELOG.md` when the public contract changes.
 Examples must show explicit `$next` use and must not imply that the skill performs
-the recommended action. Installation changes must preserve `$skill-installer`,
-the manual `$CODEX_HOME/skills/next` destination, checksum verification, and safe
-ZIP path inspection.
+the recommended action. Installation changes must preserve `$skill-installer`
+from the immutable `tree/v0.2.0/skills/next` path after release, the manual
+`${CODEX_HOME:-$HOME/.codex}/skills/next` destination, checksum verification, and
+safe ZIP path inspection.
 
 ## Release
 

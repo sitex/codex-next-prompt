@@ -12,17 +12,13 @@ ROOT: Final = Path(__file__).resolve().parents[1]
 PACKAGER: Final = ROOT / "scripts" / "package_release.py"
 VERSION: Final = "1.2.3"
 ARCHIVE_NAME: Final = f"codex-next-prompt-{VERSION}.zip"
-PAYLOAD: Final = (
-    "next/SKILL.md",
-    "next/agents/openai.yaml",
-)
+PAYLOAD: Final = ("next/SKILL.md",)
 
 
 def create_source(root: Path, version: str = VERSION) -> None:
     files = {
         "VERSION": f"{version}\n",
         "skills/next/SKILL.md": "---\nname: next\n---\n\n# Next\n",
-        "skills/next/agents/openai.yaml": "policy:\n  allow_implicit_invocation: false\n",
     }
     for relative_path, content in files.items():
         path = root / relative_path

@@ -15,6 +15,8 @@
   `make check`. Don't hide failures or silently skip gates.
 - Keep credentials, private signing keys, user data, generated packages, release
   ZIP files, and local planning artifacts out of the repository.
-- Keep the release payload exact: `next/SKILL.md` and
-  `next/agents/openai.yaml`, with version 0.2.0 sourced from `VERSION`.
+- Keep the release payload exact: only `next/SKILL.md`, with version 0.2.0
+  sourced from `VERSION`.
+- Preserve Codex 0.149.1 compatibility: no agent policy metadata; explicit
+  activation relies on user input `$next` and the frontmatter description.
 - Stage explicit paths only when preparing a commit. Don't use broad staging.

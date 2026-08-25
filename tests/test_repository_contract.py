@@ -9,6 +9,8 @@ from urllib.parse import unquote
 
 ROOT: Final = Path(__file__).resolve().parents[1]
 MARKDOWN_LINK: Final = re.compile(r"!?\[[^]]*\]\(([^)]+)\)")
+FORBIDDEN_METADATA_PATH: Final = "agents/" + "openai.yaml"
+FORBIDDEN_POLICY: Final = "allow_" + "implicit_invocation"
 REMOVED_PATHS: Final = (
     "cmd/",
     "hooks/",
@@ -41,6 +43,8 @@ CURRENT_DOCUMENTS: Final = (
     "AGENTS.md",
     "SECURITY.md",
     ".github/pull_request_template.md",
+    ".github/ISSUE_TEMPLATE/bug_report.md",
+    ".github/ISSUE_TEMPLATE/feature_request.md",
 )
 REMOVED_DOCUMENTATION_TERMS: Final = (
     "/hooks",
@@ -68,6 +72,11 @@ REMOVED_DOCUMENTATION_TERMS: Final = (
     "Go 1.",
     "go test",
     "scripts/package-release.sh",
+    FORBIDDEN_METADATA_PATH,
+    FORBIDDEN_POLICY,
+    "tree/main/skills/next",
+    "custom prompt",
+    "plugin marketplace",
 )
 
 
@@ -163,6 +172,32 @@ class TestRepositoryContract(unittest.TestCase):
                 violations.append(f"CHANGELOG.md: missing {required_term!r}")
 
         self.assertEqual(violations, [])
+
+    def test_repository_omits_incompatible_openai_metadata(self) -> None:
+        violations: list[str] = []
+
+        for path in tracked_files():
+            if path.startswith("tests/"):
+                continue
+            document = (ROOT / path).read_text(encoding="utf-8", errors="replace")
+            if path.endswith(FORBIDDEN_METADATA_PATH):
+                violations.append(f"{path}: incompatible metadata file is present")
+            if FORBIDDEN_POLICY in document:
+                violations.append(f"{path}: incompatible policy is present")
+
+        self.assertEqual(violations, [])
+
+    def test_runtime_matrix_records_codex_0149_explicit_activation_contract(self) -> None:
+        matrix = (ROOT / "tests" / "skill_scenarios.md").read_text(encoding="utf-8")
+
+        for contract_term in (
+            "Codex 0.149.1",
+            "frontmatter description",
+            "explicit catalog",
+            "$next",
+        ):
+            with self.subTest(contract_term=contract_term):
+                self.assertIn(contract_term, matrix)
 
     def test_text_attributes_match_python_skill_repository(self) -> None:
         attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")

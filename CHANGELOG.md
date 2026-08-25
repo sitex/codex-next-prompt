@@ -7,9 +7,12 @@ All notable changes to this project are documented here.
 - Pivot the 0.2.0 distribution from a non-discoverable plugin package to a
   standalone user skill.
 - Remove the plugin manifest and local marketplace metadata.
-- Package exactly `next/SKILL.md` and `next/agents/openai.yaml` in one
-  deterministic ZIP.
-- Add `$skill-installer` and `$CODEX_HOME/skills/next` installation paths.
+- Package exactly `next/SKILL.md` in one deterministic ZIP.
+- Add the post-release immutable `$skill-installer` source and
+  `${CODEX_HOME:-$HOME/.codex}/skills/next` installation path.
+- Remove agent policy metadata because Codex 0.149.1 hides the skill from the
+  explicit catalog when implicit invocation is disabled.
+- Document description-driven activation when the user types `$next`.
 
 ## [0.2.0] - 2026-08-26
 
