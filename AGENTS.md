@@ -1,15 +1,15 @@
 # Project Instructions
 
-- Keep the implementation local-only, offline, and standard-library-only.
-- Preserve the public response-level `Suggested next prompt:` contract.
-- Do not implement composer insertion, network access, telemetry, transcript
-  reads, persistence, or automatic follow-up execution.
+- Keep this repository skill-only. Do not add hooks, executable runtime code,
+  native launchers, MCP servers, apps, or automatic invocation surfaces.
+- Keep the `$next` skill local-only, offline, and standard-library-only.
+- Use only the current conversation context. Do not read transcripts or history,
+  call model APIs, persist data, or execute a recommended follow-up.
+- Preserve explicit `$next` invocation and return only ready-to-send prompt text.
 - Follow TDD: write a failing behavioral test first, make it pass minimally,
   then refactor without weakening the contract.
-- Hook stdout is a protocol stream. Emit only documented machine-readable
-  output; send concise diagnostics to stderr and never mix the two.
-- Run `make check` before reporting completion. Do not hide failures with
-  ignored errors or silent skips.
-- Keep credentials, user data, generated binaries, release archives, and local
-  planning artifacts out of the repository.
+- Run the narrowest relevant test first, then `make test`. Run `make check` only
+  when the portable packager exists. Do not hide failures or silently skip gates.
+- Keep credentials, private signing keys, user data, generated packages, release
+  archives, and local planning artifacts out of the repository.
 - Stage explicit paths only when preparing a commit; do not use broad staging.

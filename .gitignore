@@ -1,15 +1,9 @@
-# Go build and test output
-/bin/
+# Python test and package output
+__pycache__/
+*.py[cod]
 /dist/
-*.test
-*.out
 
 # Local editor and operating-system files
 .DS_Store
 *.swp
 *.swo
-
-# Local coverage and profiling output
-coverage.out
-coverprofile.out
-profile.cov

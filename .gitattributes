@@ -1,11 +1,8 @@
 * text=auto
-*.go text eol=lf
+*.py text eol=lf
 *.sh text eol=lf
 Makefile text eol=lf
 *.json text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
 *.md text eol=lf
-*.cmd text eol=crlf
-*.ps1 text eol=crlf
-hooks/run text eol=lf
