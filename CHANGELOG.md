@@ -1,43 +1,39 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project are documented here.
 
 ## [Unreleased]
 
-- Bootstrap the public repository with governance documents and a Go 1.25
-  standard-library-only toolchain.
-- Document response-level `Suggested next prompt:` behavior and the explicit
-  absence of composer insertion, network access, telemetry, transcript reads,
-  and persistence.
-- Track the implementation work in [issue #1](https://github.com/sitex/codex-next-prompt/issues/1).
-- Implement fail-open `SessionStart` and `Stop` hooks that request one suitable
-  response-level suggestion, preserve exact-output tasks, and never alter the
-  composer or run a follow-up automatically.
-- Add a marketplace catalog for packaged release roots; source checkouts remain
-  non-installable because generated binaries are intentionally untracked.
-- Add target-specific release archives, SHA-256 checksums, platform CI smoke
-  coverage, release automation, and a self-contained local marketplace for
-  Linux, macOS, and Windows.
-- Verify the full Codex `0.149.1` lifecycle on Linux: untrusted hooks skip,
-  trusted hooks run, suitable replies get a suggestion, exact `OK` output stays
-  unchanged, and the stop hook completes. Windows remains CI smoke coverage;
-  native macOS execution hasn't been tested locally.
-- Add a checksum-gated LLM installation procedure with a ready-to-use README
-  prompt and mandatory interactive hook review.
-- Fetch the exact annotated tag ref before release signature verification.
-- Select the single Windows archive explicitly before native release smoke.
-- Set synthetic Windows architecture inside the same `cmd.exe` launcher test.
-- Add usage examples for normal suggestions, exact-output suppression, and
-  responses waiting for user input.
-- Harden release builds for linked worktrees, verify signed tags against the
-  workflow commit, smoke extracted archives on native runners, and refuse to
-  replace existing release assets.
-- Encode SessionStart no-tools and no-composer constraints structurally, decode
-  the Stop hook activity field, and validate repository JSON and local Markdown
-  links in the standard test suite.
-- Harden release provenance with least-privilege workflow permissions, immutable
-  action pins, repository-provisioned tag verification, main-branch ancestry
-  checks, status-aware release lookup, bounded hook input, quoted plugin paths,
-  and archive extraction preflight.
-- Bind release verification to the tag signature's approved primary fingerprint
-  and reject committed signing-key bundles containing additional primary keys.
+- No changes yet.
+
+## [0.2.0] - 2026-08-26
+
+### Breaking
+
+- Replace automatic response suggestions with the explicit `$next` skill.
+- Remove the executable runtime and all automatic invocation behavior.
+- Replace platform-specific packages with one portable ZIP and matching SHA-256
+  file.
+- Require removal of the previous plugin and marketplace registration before a
+  clean 0.2.0 install.
+
+### Added
+
+- Generate one ready-to-send next prompt from the current conversation.
+- Return two or three separate prompts only when the user faces a real fork.
+- Ask for missing context instead of inventing values or emitting placeholders.
+- Match the conversation's language and never execute the generated prompt.
+- Add deterministic standard-library packaging, package contract tests, safe ZIP
+  installation guidance, and signed release verification.
+
+### Security
+
+- Keep the package instruction-only, with no network access, persistence,
+  conversation-record reads, model API calls, secret access, or command execution.
+
+## [0.1.0] - 2026-08-20
+
+- Initial experimental release with automatic response-level suggestions, an
+  executable lifecycle integration, and separate operating-system packages.
+- Added checksums, signed-tag verification, local marketplace installation, and
+  public project governance.

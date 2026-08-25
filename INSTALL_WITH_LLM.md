@@ -1,149 +1,136 @@
-# Install Codex Next Prompt with an LLM
+# Install Codex Next Prompt 0.2.0 with an LLM
 
-This document is written for an LLM or coding agent installing
-`sitex/codex-next-prompt` on behalf of a user.
+This procedure installs the published, skill-only Codex Next Prompt package.
+After installation, the canonical invocation is `$next`.
 
 ## Safety Contract
 
-- Install only from a published GitHub Release. Do not build or install from the
-  source checkout.
-- Download the archive and its matching `.sha256` file from the same release.
-- Stop immediately if the checksum does not match.
-- Do not use `--dangerously-bypass-hook-trust`.
-- Do not approve or simulate `/hooks` trust for the user. The user must review
-  and trust the hooks interactively.
-- Keep the extracted release directory in place while its marketplace and
-  plugin are installed.
-- Do not request credentials, API keys, or network access beyond downloading
-  the public release and running the normal Codex model connection.
+- Install version 0.2.0 or newer only from a published GitHub release.
+- Download exactly one ZIP and its matching `.sha256` file from the same release.
+- Verify the checksum before inspecting or extracting the ZIP.
+- Reject absolute paths, parent traversal, symbolic links, and files outside the
+  expected top-level release directory.
+- Don't build from source, request credentials, read conversation records, or
+  change unrelated Codex settings.
+- Remove any pre-0.2 installation before registering the new marketplace.
+- Report failures and stop. Don't weaken a failed safety check.
 
-## Installation Procedure
+## Procedure
 
-### 1. Check prerequisites
+### 1. Confirm the release
 
-Run:
+Resolve a published release at
+`https://github.com/sitex/codex-next-prompt/releases`. Require a semantic version
+of 0.2.0 or newer. Let `VERSION` be that version.
 
-```text
-codex --version
-```
-
-Require Codex `0.149.1` or newer. If `codex` is unavailable or too old, explain
-the requirement and stop.
-
-### 2. Detect the platform
-
-Select exactly one release target:
-
-| Operating system | Architecture | Target |
-|---|---|---|
-| Linux | x86_64 / amd64 | `linux-amd64` |
-| Linux | arm64 / aarch64 | `linux-arm64` |
-| macOS | x86_64 / amd64 | `darwin-amd64` |
-| macOS | arm64 / Apple Silicon | `darwin-arm64` |
-| Windows | AMD64 / x86_64 | `windows-amd64` |
-| Windows | ARM64 | `windows-arm64` |
-
-If the operating system or architecture is not listed, report that it is
-unsupported and stop.
-
-### 3. Resolve a published release
-
-Query the latest GitHub Release for
-`https://github.com/sitex/codex-next-prompt` and obtain its tag/version. If no
-release exists, tell the user that installation cannot continue until a release
-is published. Do not fall back to the source repository.
-
-For version `VERSION` and target `TARGET`, the expected filenames are:
-
-- Linux/macOS: `codex-next-prompt-VERSION-TARGET.tar.gz`
-- Windows: `codex-next-prompt-VERSION-TARGET.zip`
-- Checksum: the archive filename plus `.sha256`
-
-### 4. Download and verify
-
-Create a stable user-selected installation directory, not a temporary directory
-that will be deleted automatically. Download the archive and checksum there.
-
-On Linux:
-
-```sh
-sha256sum -c "ARCHIVE.sha256"
-```
-
-On macOS:
-
-```sh
-shasum -a 256 -c "ARCHIVE.sha256"
-```
-
-On Windows PowerShell, parse the expected hash from the checksum file and compare
-it with:
-
-```powershell
-(Get-FileHash -Algorithm SHA256 ARCHIVE).Hash
-```
-
-Comparison on Windows must be case-insensitive. If verification fails, delete
-the downloaded files, report the failure, and stop.
-
-### 5. Extract the archive
-
-Extract the archive into the stable installation directory. The extracted root
-is named `codex-next-prompt-VERSION` and contains a self-contained local
-marketplace.
-
-Do not move individual files out of this directory.
-
-### 6. Register and install
-
-Run these commands with the extracted root path:
+Download both files into a stable user-selected directory:
 
 ```text
-codex plugin marketplace add "PATH_TO_EXTRACTED_ROOT"
+codex-next-prompt-VERSION.zip
+codex-next-prompt-VERSION.zip.sha256
+```
+
+Don't use a temporary directory that will disappear while the marketplace is
+registered.
+
+### 2. Verify the checksum
+
+From the download directory, run:
+
+```sh
+sha256sum -c "codex-next-prompt-${VERSION}.zip.sha256"
+```
+
+If `sha256sum` isn't available, compute SHA-256 with a trusted local tool and
+compare the full hexadecimal digest with the checksum file. Stop on any mismatch.
+
+### 3. Inspect the ZIP safely
+
+Set `ARCHIVE` and run this standard-library inspection before extraction:
+
+```sh
+ARCHIVE="codex-next-prompt-${VERSION}.zip" python3 - <<'PY'
+import os
+import stat
+import zipfile
+from pathlib import PurePosixPath
+
+archive_path = os.environ["ARCHIVE"]
+version = archive_path.removeprefix("codex-next-prompt-").removesuffix(".zip")
+root = f"codex-next-prompt-{version}"
+
+with zipfile.ZipFile(archive_path) as archive:
+    for member in archive.infolist():
+        path = PurePosixPath(member.filename)
+        mode = member.external_attr >> 16
+        if path.is_absolute() or ".." in path.parts:
+            raise SystemExit(f"unsafe ZIP path: {member.filename}")
+        if not path.parts or path.parts[0] != root:
+            raise SystemExit(f"unexpected ZIP root: {member.filename}")
+        if stat.S_ISLNK(mode):
+            raise SystemExit(f"symbolic link not allowed: {member.filename}")
+        print(member.filename)
+PY
+```
+
+The listing should contain only plugin metadata and the `next` skill beneath the
+single expected root. Stop if any entry is unexpected.
+
+### 4. Remove an older installation
+
+Check whether `codex-next-prompt@codex-next-prompt` or its marketplace is already
+installed. If so, remove them before extraction and registration:
+
+```sh
+codex plugin remove codex-next-prompt@codex-next-prompt
+codex plugin marketplace remove codex-next-prompt
+```
+
+If an older extracted directory must be deleted, show the exact resolved path to
+the user first. Delete only that release directory, never a parent or wildcard
+path.
+
+### 5. Extract and install
+
+Extract only after checksum and path inspection succeed:
+
+```sh
+python3 -m zipfile -e "codex-next-prompt-${VERSION}.zip" .
+codex plugin marketplace add "./codex-next-prompt-${VERSION}"
 codex plugin marketplace list
 codex plugin list --available
 codex plugin add codex-next-prompt@codex-next-prompt
 codex plugin list
 ```
 
-Verify that `codex-next-prompt@codex-next-prompt` is installed and enabled. If
-any command fails, report the exact command and error. Do not bypass Codex
-security controls.
+Verify that the plugin is installed and enabled. Keep the extracted directory in
+place while the local marketplace is registered.
 
-### 7. Hand control back to the user
+### 6. Verify discovery
 
-Tell the user to:
+Restart Codex. Confirm that the `next` skill is discoverable in the enabled
+skills. Then ask the user to invoke:
 
-1. Start a new interactive Codex session.
-2. Open `/hooks`.
-3. Review the `SessionStart` and `Stop` commands and confirm they point inside
-   the checksum-verified release directory.
-4. Trust the hooks only if the paths and commands are correct.
+```text
+$next
+```
 
-Do not claim installation is fully active until the user completes this review.
+The skill should return ready-to-send prompt text based on the current
+conversation. It must not run that prompt.
 
 ## Uninstall
 
-Run:
-
-```text
+```sh
 codex plugin remove codex-next-prompt@codex-next-prompt
 codex plugin marketplace remove codex-next-prompt
 ```
 
-After both commands succeed, the extracted release directory and downloaded
-archive may be removed.
+After both commands succeed, remove the exact extracted release directory and
+downloaded ZIP files if the user wants them deleted.
 
 ## Completion Report
 
-Report:
-
-- detected Codex version;
-- selected release version and target;
-- checksum result;
-- extracted marketplace path;
-- plugin list result;
-- that interactive `/hooks` review is still required.
-
-Never include authentication files, tokens, session transcripts, or unrelated
-Codex configuration in the report.
+Report the selected version, checksum result, inspected top-level directory,
+installation path, plugin discovery result, restart status, and `$next`
+invocation result. Don't include credentials, conversation records, private
+paths unrelated to this install, or unrelated configuration.

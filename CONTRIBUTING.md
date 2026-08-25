@@ -1,41 +1,60 @@
-# Contributing
+# Contributing to Codex Next Prompt 0.2.0
 
-Thank you for helping improve Codex Next Prompt. Product scope and the public
-behavior contract are tracked in [issue #1](https://github.com/sitex/codex-next-prompt/issues/1).
+Codex Next Prompt is a skill-only plugin. Its public action is explicit `$next`
+invocation, and its output is ready-to-send prompt text based on the current
+conversation.
 
-## Before Opening a Change
+## Scope
 
-- Keep the plugin local-only and standard-library-only.
-- Preserve the response-level `Suggested next prompt:` behavior.
-- Do not add composer insertion, network access, telemetry, transcript reads,
-  persistence, or automatic continuation.
-- Add or update tests before implementation changes. Use a red, green, refactor
-  cycle and table-driven tests for protocol behavior.
-- Keep hook stdout machine-readable and reserve stderr for concise diagnostics.
-- Keep public documentation free of credentials, user data, private paths, and
-  local planning artifacts.
+- Keep the repository instruction-only and local-only.
+- Preserve explicit `$next` invocation. Don't add automatic invocation or an
+  automatic response footer.
+- Use only current conversation context. Don't add network access, persistence,
+  conversation-record reads, model API calls, executable runtime code, or prompt
+  execution.
+- Return one default prompt. Use two or three separate prompts only for a real
+  fork with materially different paths.
+- Ask for missing context instead of inventing values or writing placeholders.
+- Keep generated packages, credentials, private signing keys, user data, and
+  local planning artifacts out of the repository.
 
-## Validation
+## TDD and Validation
 
-Use Go 1.25 and run the narrowest relevant command first, followed by:
+Start contract changes with a focused failing test. Assert routing fields,
+package structure, or minimal contract terms, not prose snapshots. Make the
+smallest change that passes, then refactor without weakening the test.
+
+Run the narrowest relevant test first, followed by:
 
 ```sh
+make test
+make clean
 make check
 ```
 
-Do not hide failures with broad skips or ignored errors. Changes that affect
-the public contract should explain the behavior and update `CHANGELOG.md`.
-Release tags must use strict `vMAJOR.MINOR.PATCH`-style versions, be annotated,
-and be signed by the public key in
+Review the generated ZIP contents and checksum. Don't hide failures with skips,
+ignored errors, or a weaker assertion.
+
+## Documentation and Safety
+
+Update current documentation and `CHANGELOG.md` when the public contract changes.
+Examples must show explicit `$next` use and must not imply that the skill performs
+the recommended action. Installation changes need checksum verification and safe
+ZIP path inspection.
+
+## Release
+
+The manifest version is the release source of truth. Produce one portable ZIP
+and its `.sha256` file with `make package` or `make check`.
+
+Tags must use `vMAJOR.MINOR.PATCH`, be annotated and signed, and match the
+manifest version. The approved public key is
 [`RELEASE_SIGNING_KEY.asc`](RELEASE_SIGNING_KEY.asc), fingerprint
-`BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77`. Public key rotation requires a
-reviewed code change that updates the key and expected fingerprint together.
-The committed key bundle must contain exactly one primary key. Never commit a
-private signing key.
+`BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77`. The key bundle contains one primary
+key. Never commit private key material.
 
 ## Pull Requests
 
-Describe the user-visible behavior, scope boundaries, tests run, and any
-known limitations. Keep each pull request focused and link the relevant issue.
-Do not include generated binaries, release archives, credentials, transcripts,
-or unrelated repository files.
+Describe the user-visible contract, scope boundaries, tests run, generated
+package inspection, and related issue. Keep the change focused and don't include
+generated ZIP files.

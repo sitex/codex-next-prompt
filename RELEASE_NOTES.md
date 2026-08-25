@@ -1,21 +1,39 @@
-# Codex Next Prompt
+# Codex Next Prompt 0.2.0
 
-This release packages Codex Next Prompt as a self-contained local marketplace
-for Linux, macOS, and Windows on `amd64` and `arm64`. Download the archive and
-matching `.sha256` file for one platform from the same release.
+Version 0.2.0 replaces the automatic response behavior with one explicit,
+skill-only action. Invoke `$next` to generate ready-to-send prompt text from the
+current conversation. The skill never executes its result.
 
-## Compatibility
+## Breaking Migration
 
-- Codex `0.149.1` or newer is required.
-- The extracted release directory must remain in place while its marketplace
-  and plugin are installed.
-- Release tags are annotated and signed; the release workflow verifies the tag
-  signature and exact source commit before packaging.
+Remove the previous plugin and marketplace registration before installing
+0.2.0. Delete the old extracted release directory only after checking its exact
+path, then install the new package from a clean directory. Existing automatic
+response behavior doesn't carry forward.
 
-## Limitations
+## Package
 
-- Suggestions are response-level text only, not composer insertion or prefill.
-- The plugin does not execute the suggested prompt or run tools on its behalf.
-- The plugin is local-only and has no network access, telemetry, persistence,
-  transcript reads, or external model call.
-- The static local marketplace does not provide remote update discovery.
+Every release has one portable asset and one checksum:
+
+```text
+codex-next-prompt-0.2.0.zip
+codex-next-prompt-0.2.0.zip.sha256
+```
+
+Verify SHA-256, inspect the ZIP paths, extract the single release root, register
+that root as a local marketplace, install the plugin, and restart Codex. See
+[INSTALL_WITH_LLM.md](INSTALL_WITH_LLM.md) for the safe procedure.
+
+## Contract
+
+- `$next` is the canonical and explicit invocation.
+- Input comes only from the current conversation.
+- Output is one default prompt, or two to three prompts for a real fork.
+- Missing context produces a request for context, not invented values.
+- Output follows the conversation's language.
+- The package contains instructions and metadata only.
+- There is no automatic invocation, executable runtime, network access,
+  persistence, conversation-record access, model API call, or prompt execution.
+
+Release tags remain annotated, signed, and checked against the approved public
+key before the single ZIP is published.

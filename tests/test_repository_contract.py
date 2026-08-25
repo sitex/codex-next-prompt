@@ -30,6 +30,34 @@ REMOVED_FILES: Final = {
     "tests/smoke-posix.sh",
     "tests/smoke-windows.ps1",
 }
+CURRENT_DOCUMENTS: Final = (
+    "README.md",
+    "EXAMPLES.md",
+    "INSTALL_WITH_LLM.md",
+    "RELEASE_NOTES.md",
+    "CONTRIBUTING.md",
+    "AGENTS.md",
+    "SECURITY.md",
+    ".github/pull_request_template.md",
+)
+REMOVED_DOCUMENTATION_TERMS: Final = (
+    "/next",
+    "/hooks",
+    "Suggested next prompt:",
+    "SessionStart",
+    "Stop hook",
+    "hook trust",
+    "lifecycle hook",
+    ".tar.gz",
+    "linux-amd64",
+    "darwin-amd64",
+    "windows-amd64",
+    "GOOS",
+    "GOARCH",
+    "Go 1.",
+    "go test",
+    "scripts/package-release.sh",
+)
 
 
 def tracked_files() -> tuple[str, ...]:
@@ -105,6 +133,28 @@ class TestRepositoryContract(unittest.TestCase):
         self.assertEqual(manifest.get("skills"), "./skills/")
         for forbidden_field in ("hooks", "mcpServers", "apps"):
             self.assertNotIn(forbidden_field, manifest)
+
+    def test_current_docs_route_only_to_explicit_v02_next_skill(self) -> None:
+        violations: list[str] = []
+
+        for path in CURRENT_DOCUMENTS:
+            document = (ROOT / path).read_text(encoding="utf-8")
+            if "0.2.0" not in document:
+                violations.append(f"{path}: missing current version 0.2.0")
+            if "$next" not in document:
+                violations.append(f"{path}: missing canonical $next invocation")
+            if "0.1.0" in document:
+                violations.append(f"{path}: v0.1 history belongs in CHANGELOG.md")
+            for term in REMOVED_DOCUMENTATION_TERMS:
+                if term in document:
+                    violations.append(f"{path}: contains removed term {term!r}")
+
+        changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        for required_term in ("[Unreleased]", "[0.2.0]", "[0.1.0]", "$next"):
+            if required_term not in changelog:
+                violations.append(f"CHANGELOG.md: missing {required_term!r}")
+
+        self.assertEqual(violations, [])
 
     def test_text_attributes_match_python_skill_repository(self) -> None:
         attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
