@@ -24,10 +24,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git cat-file -t "$GITHUB_REF_NAME")" = tag
+          git fetch --force --no-tags origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
+          if test "$(git cat-file -t "$GITHUB_REF_NAME")" != tag; then
+            printf '%s\n' "release ref is not an annotated tag: $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
           scripts/verify-release-tag.sh RELEASE_SIGNING_KEY.asc "$GITHUB_REF_NAME" BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77
           tag_commit=$(git rev-list -n 1 "$GITHUB_REF_NAME")
-          test "$tag_commit" = "$GITHUB_SHA"
+          if test "$tag_commit" != "$GITHUB_SHA"; then
+            printf '%s\n' "tag commit $tag_commit does not match event SHA $GITHUB_SHA" >&2
+            exit 1
+          fi
           git fetch --no-tags origin main:refs/remotes/origin/main
           git merge-base --is-ancestor "$tag_commit" origin/main
           version=${GITHUB_REF_NAME#v}

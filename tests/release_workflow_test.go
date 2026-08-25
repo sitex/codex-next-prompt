@@ -20,6 +20,7 @@ func Test_ReleaseWorkflow_publishes_verified_native_smoked_tag_artifacts(t *test
 	requiredTokens := []string{
 		"permissions:\n  contents: read",
 		"publish:\n    name: Publish immutable GitHub release\n    permissions:\n      contents: write",
+		`git fetch --force --no-tags origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"`,
 		"scripts/verify-release-tag.sh RELEASE_SIGNING_KEY.asc \"$GITHUB_REF_NAME\"",
 		"BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77",
 		"git fetch --no-tags origin main",
