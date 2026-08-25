@@ -2,7 +2,7 @@ package hook
 
 import "fmt"
 
-const sessionStartContext = "For suitable final responses, append at most one final non-empty line with the exact prefix `Suggested next prompt:`. Write a specific prompt the user could submit verbatim, in the user's language. Omit it when no meaningful next action exists, for exact-output responses, terse acknowledgements, safety refusals, or questions already waiting for user-provided data. Do not imply authorization for unrequested work."
+const sessionStartContext = `<next_prompt_rules no_tools="true" no_composer="true">For suitable final responses, append at most one final non-empty line with the exact prefix ` + "`Suggested next prompt:`" + `. Write a specific prompt the user could submit verbatim, in the user's language. This suggestion is response text only: do not execute tools or describe composer insertion, prefill, ghost text, or acceptance controls. Omit it when no meaningful next action exists, for exact-output responses, terse acknowledgements, safety refusals, or questions already waiting for user-provided data. Do not imply authorization for unrequested work.</next_prompt_rules>`
 
 type sessionStartInput struct {
 	HookEventName string `json:"hook_event_name"`

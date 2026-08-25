@@ -22,3 +22,9 @@ All notable changes to this project will be documented in this file.
   trusted hooks run, suitable replies get a suggestion, exact `OK` output stays
   unchanged, and the stop hook completes. Windows remains CI smoke coverage;
   native macOS execution hasn't been tested locally.
+- Harden release builds for linked worktrees, verify signed tags against the
+  workflow commit, smoke extracted archives on native runners, and refuse to
+  replace existing release assets.
+- Encode SessionStart no-tools and no-composer constraints structurally, decode
+  the Stop hook activity field, and validate repository JSON and local Markdown
+  links in the standard test suite.

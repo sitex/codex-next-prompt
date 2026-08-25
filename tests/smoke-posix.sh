@@ -37,7 +37,7 @@ mkdir -p "$binary_dir" "$plugin_root/hooks" "$temp_root/work/subdirectory"
 cp "$repo_root/hooks/run" "$plugin_root/hooks/run"
 chmod +x "$plugin_root/hooks/run"
 
-GOTOOLCHAIN=auto go build -o "$binary_dir/codex-next-prompt" "$repo_root/cmd/codex-next-prompt"
+GOTOOLCHAIN=auto go build -buildvcs=false -o "$binary_dir/codex-next-prompt" "$repo_root/cmd/codex-next-prompt"
 
 session_output=$(
 	cd "$temp_root/work/subdirectory"

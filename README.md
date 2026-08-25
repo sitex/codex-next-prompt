@@ -49,7 +49,7 @@ they point into the verified release directory. The plugin can then add
 `Suggested next prompt:` to suitable final responses.
 
 Codex `0.149.1` has no separate disable command. Remove the plugin to stop its
-hooks, and remove the marketplace too if you no longer want update discovery:
+hooks, and remove the static local marketplace when it is no longer needed:
 
 ```text
 codex plugin remove codex-next-prompt@codex-next-prompt
@@ -112,7 +112,9 @@ Each archive is a self-contained local marketplace root; the repository copy of
 `.agents/plugins/marketplace.json` defines that packaged distribution catalog,
 not a source-checkout installation path.
 GitHub release automation builds the supported platform matrix from a version
-tag. Maintainers should run `make check` before creating a release tag.
+tag. Release tags must be annotated and signed because CI runs `git verify-tag`
+and confirms the tag resolves to the workflow commit before packaging.
+Maintainers should run `make check` before creating a release tag.
 
 ## Contributing
 

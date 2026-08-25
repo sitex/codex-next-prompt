@@ -21,7 +21,7 @@ test:
 
 build:
 	mkdir -p bin
-	GOTOOLCHAIN=auto go build -trimpath -o bin/codex-next-prompt ./cmd/codex-next-prompt
+	GOTOOLCHAIN=auto go build -buildvcs=false -trimpath -o bin/codex-next-prompt ./cmd/codex-next-prompt
 
 smoke:
 	@test -x tests/smoke-posix.sh || { printf '%s\n' 'smoke: tests/smoke-posix.sh is not available' >&2; exit 1; }
@@ -36,7 +36,8 @@ check:
 	@test -z "$$(gofmt -l $(GO_FILES))" || { printf '%s\n' 'check: Go files are not formatted' >&2; exit 1; }
 	GOTOOLCHAIN=auto go vet ./...
 	GOTOOLCHAIN=auto go test -race -shuffle=on -count=1 ./...
-	mkdir -p bin
-	GOTOOLCHAIN=auto go build -trimpath -o bin/codex-next-prompt ./cmd/codex-next-prompt
+	@temp_dir=$$(mktemp -d "$${TMPDIR:-/tmp}/codex-next-prompt-check.XXXXXX"); \
+	trap 'rm -rf "$$temp_dir"' EXIT HUP INT TERM; \
+	GOTOOLCHAIN=auto go build -buildvcs=false -trimpath -o "$$temp_dir/codex-next-prompt" ./cmd/codex-next-prompt
 	test -x tests/smoke-posix.sh || { printf '%s\n' 'check: tests/smoke-posix.sh is not available' >&2; exit 1; }
 	tests/smoke-posix.sh

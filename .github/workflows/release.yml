@@ -4,24 +4,33 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: Release version, with or without a leading v
-        required: true
-        type: string
 
 permissions:
   contents: write
 
 jobs:
   verify:
-    name: Verify source
+    name: Verify signed release source
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out source
+      - name: Check out tagged source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify tag identity and version
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git cat-file -t "$GITHUB_REF_NAME")" = tag
+          git verify-tag "$GITHUB_REF_NAME"
+          tag_commit=$(git rev-list -n 1 "$GITHUB_REF_NAME")
+          test "$tag_commit" = "$GITHUB_SHA"
+          version=${GITHUB_REF_NAME#v}
+          test "$GITHUB_REF_NAME" = "v$version"
+          printf '%s\n' "$version" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?(\+[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?$'
+          printf 'RELEASE_VERSION=%s\n' "$version" >>"$GITHUB_ENV"
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -32,38 +41,53 @@ jobs:
       - name: Run repository checks
         run: make check
 
-      - name: Check generated files
+      - name: Check repository cleanliness
         shell: bash
         run: |
-          set -eu
+          set -euo pipefail
           test ! -e go.sum
-          test -z "$(git ls-files 'bin/*' 'dist/*')"
           git diff --exit-code
+          test -z "$(git status --porcelain --untracked-files=all)"
 
   package:
-    name: Package ${{ matrix.goos }}-${{ matrix.goarch }}
+    name: Package and smoke ${{ matrix.goos }}-${{ matrix.goarch }}
     needs: verify
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - goos: linux
             goarch: amd64
+            runner: ubuntu-latest
           - goos: linux
             goarch: arm64
+            runner: ubuntu-24.04-arm
           - goos: darwin
             goarch: amd64
+            runner: macos-15-intel
           - goos: darwin
             goarch: arm64
+            runner: macos-latest
           - goos: windows
             goarch: amd64
+            runner: ubuntu-latest
           - goos: windows
             goarch: arm64
+            runner: ubuntu-latest
 
     steps:
-      - name: Check out source
+      - name: Check out tagged source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=${GITHUB_REF_NAME#v}
+          printf 'RELEASE_VERSION=%s\n' "$version" >>"$GITHUB_ENV"
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -71,24 +95,14 @@ jobs:
           go-version: '1.25.x'
           cache: false
 
-      - name: Resolve release version
-        id: version
-        shell: bash
-        env:
-          INPUT_VERSION: ${{ inputs.version }}
-        run: |
-          set -eu
-          raw_version=${INPUT_VERSION:-${GITHUB_REF_NAME}}
-          version=${raw_version#v}
-          test -n "$version"
-          printf 'version=%s\n' "$version" >>"$GITHUB_OUTPUT"
-          printf 'tag=v%s\n' "$version" >>"$GITHUB_OUTPUT"
-
       - name: Package target
         shell: bash
-        run: scripts/package-release.sh "${{ steps.version.outputs.version }}" "${{ matrix.goos }}" "${{ matrix.goarch }}"
+        env:
+          TARGET_GOOS: ${{ matrix.goos }}
+          TARGET_GOARCH: ${{ matrix.goarch }}
+        run: scripts/package-release.sh "$RELEASE_VERSION" "$TARGET_GOOS" "$TARGET_GOARCH"
 
-      - name: Upload target archive
+      - name: Upload tested target archive
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.goos }}-${{ matrix.goarch }}
@@ -99,40 +113,64 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  publish:
-    name: Publish GitHub release
+  smoke-windows:
+    name: Smoke extracted Windows ${{ matrix.goarch }} archive
     needs: package
+    if: always() && needs.package.result == 'success'
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goarch: amd64
+            runner: windows-latest
+          - goarch: arm64
+            runner: windows-11-arm
+
+    steps:
+      - name: Check out smoke test
+        uses: actions/checkout@v4
+
+      - name: Download Windows archive
+        uses: actions/download-artifact@v5
+        with:
+          name: release-windows-${{ matrix.goarch }}
+          path: dist
+
+      - name: Run extracted Windows launcher smoke
+        shell: pwsh
+        run: tests/smoke-windows.ps1 (Get-ChildItem dist/*.zip -File -Single)
+
+  publish:
+    name: Publish immutable GitHub release
+    needs: [package, smoke-windows]
+    if: always() && needs.package.result == 'success' && needs.smoke-windows.result == 'success'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download release archives
+      - name: Check out release notes
+        uses: actions/checkout@v4
+
+      - name: Download tested release archives
         uses: actions/download-artifact@v5
         with:
           pattern: release-*
           path: dist
           merge-multiple: true
 
-      - name: Resolve release tag
-        id: version
-        shell: bash
-        env:
-          INPUT_VERSION: ${{ inputs.version }}
-        run: |
-          set -eu
-          raw_version=${INPUT_VERSION:-${GITHUB_REF_NAME}}
-          version=${raw_version#v}
-          test -n "$version"
-          printf 'tag=v%s\n' "$version" >>"$GITHUB_OUTPUT"
-
-      - name: Create or update GitHub release
+      - name: Refuse an existing release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: |
-          set -eu
-          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" dist/* --repo "$GITHUB_REPOSITORY" --clobber
-          else
-            gh release create "$RELEASE_TAG" dist/* --repo "$GITHUB_REPOSITORY" --generate-notes --title "$RELEASE_TAG"
+          set -euo pipefail
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            printf '%s\n' "release already exists: $GITHUB_REF_NAME" >&2
+            exit 1
           fi
+
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md

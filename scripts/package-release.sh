@@ -15,11 +15,15 @@ goos=$2
 goarch=$3
 
 case "$version" in
-'' | *[!0-9A-Za-z._+-]* | .* | *..* | *--* | *++*)
+'' | 0 | *[!0-9A-Za-z.+-]*)
 	printf '%s\n' "package-release: invalid version: $version" >&2
 	exit 2
 	;;
 esac
+if ! printf '%s\n' "$version" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?(\+[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?$'; then
+	printf '%s\n' "package-release: invalid version: $version" >&2
+	exit 2
+fi
 
 case "$goos" in
 linux | darwin | windows)
@@ -64,7 +68,7 @@ fi
 (
 	cd "$repo_root"
 	GOTOOLCHAIN=auto CGO_ENABLED=0 GOOS="$goos" GOARCH="$goarch" \
-		go build -trimpath -o "$target_dir/$binary_name" ./cmd/codex-next-prompt
+		go build -buildvcs=false -trimpath -o "$target_dir/$binary_name" ./cmd/codex-next-prompt
 )
 
 chmod +x "$stage_root/hooks/run"
@@ -116,6 +120,22 @@ else
 	exit 1
 fi
 printf '%s  %s\n' "$checksum" "$archive_base" >"$archive_path.sha256"
+
+host_os=$(uname -s)
+host_arch=$(uname -m)
+case "$host_os" in
+Linux) native_os=linux ;;
+Darwin) native_os=darwin ;;
+*) native_os=unsupported ;;
+esac
+case "$host_arch" in
+x86_64 | amd64) native_arch=amd64 ;;
+arm64 | aarch64) native_arch=arm64 ;;
+*) native_arch=unsupported ;;
+esac
+if test "$goos" = "$native_os" && test "$goarch" = "$native_arch"; then
+	"$repo_root/tests/smoke-archive-posix.sh" "$archive_path"
+fi
 
 printf '%s\n' "$archive_path"
 printf '%s\n' "$archive_path.sha256"

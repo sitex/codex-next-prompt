@@ -14,6 +14,7 @@ const (
 type stopInput struct {
 	HookEventName        string  `json:"hook_event_name"`
 	LastAssistantMessage *string `json:"last_assistant_message"`
+	StopHookActive       bool    `json:"stop_hook_active"`
 }
 
 type stopOutput struct {

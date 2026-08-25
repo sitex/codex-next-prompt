@@ -49,7 +49,7 @@ jobs:
 
       - name: Build native binary
         shell: bash
-        run: GOTOOLCHAIN=auto CGO_ENABLED=0 go build -trimpath -o "${RUNNER_TEMP}/codex-next-prompt${{ runner.os == 'Windows' && '.exe' || '' }}" ./cmd/codex-next-prompt
+        run: GOTOOLCHAIN=auto CGO_ENABLED=0 go build -buildvcs=false -trimpath -o "${RUNNER_TEMP}/codex-next-prompt${{ runner.os == 'Windows' && '.exe' || '' }}" ./cmd/codex-next-prompt
 
       - name: Run POSIX native smoke
         if: runner.os != 'Windows'

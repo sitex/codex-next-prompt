@@ -2,6 +2,7 @@ package hook
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -12,6 +13,12 @@ type sessionStartEnvelope struct {
 		HookEventName     string `json:"hookEventName"`
 		AdditionalContext string `json:"additionalContext"`
 	} `json:"hookSpecificOutput"`
+}
+
+type nextPromptRules struct {
+	XMLName    xml.Name `xml:"next_prompt_rules"`
+	NoTools    string   `xml:"no_tools,attr"`
+	NoComposer string   `xml:"no_composer,attr"`
 }
 
 func decodeSessionStartOutput(t *testing.T, output string) sessionStartEnvelope {
@@ -54,6 +61,13 @@ func Test_Run_session_start_emits_guidance_for_supported_sources(t *testing.T) {
 			}
 			if strings.Count(envelope.HookSpecificOutput.AdditionalContext, "Suggested next prompt:") != 1 {
 				t.Fatalf("Then additionalContext must contain the public marker exactly once")
+			}
+			var rules nextPromptRules
+			if err := xml.Unmarshal([]byte(envelope.HookSpecificOutput.AdditionalContext), &rules); err != nil {
+				t.Fatalf("Then additionalContext must be structured XML: %v", err)
+			}
+			if rules.NoTools != "true" || rules.NoComposer != "true" {
+				t.Fatalf("Then rule attributes = no_tools:%q no_composer:%q, want true", rules.NoTools, rules.NoComposer)
 			}
 		})
 	}

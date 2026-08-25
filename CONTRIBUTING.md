@@ -25,6 +25,8 @@ make check
 
 Do not hide failures with broad skips or ignored errors. Changes that affect
 the public contract should explain the behavior and update `CHANGELOG.md`.
+Release tags must use strict `vMAJOR.MINOR.PATCH`-style versions, be annotated,
+and be signed by a key available to the GitHub Actions runner for `git verify-tag`.
 
 ## Pull Requests
 

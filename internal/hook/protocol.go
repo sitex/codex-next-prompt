@@ -12,10 +12,6 @@ type Streams struct {
 	Stderr io.Writer
 }
 
-type hookInput struct {
-	HookEventName string `json:"hook_event_name"`
-}
-
 func decodeSingleObject[T any](reader io.Reader, destination *T) error {
 	decoder := json.NewDecoder(reader)
 	if err := decoder.Decode(destination); err != nil {
@@ -35,6 +31,7 @@ func decodeSingleObject[T any](reader io.Reader, destination *T) error {
 
 func writeJSON[T any](writer io.Writer, value T) error {
 	encoder := json.NewEncoder(writer)
+	encoder.SetEscapeHTML(false)
 	if err := encoder.Encode(value); err != nil {
 		return fmt.Errorf("encode output: %w", err)
 	}

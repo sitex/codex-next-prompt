@@ -42,6 +42,23 @@ func Test_Run_stop_completes_silently_for_valid_or_absent_suggestion(t *testing.
 	}
 }
 
+func Test_StopInput_decodes_stop_hook_active_contract(t *testing.T) {
+	// Given
+	data := []byte(`{"hook_event_name":"Stop","stop_hook_active":true}`)
+
+	// When
+	var input stopInput
+	err := json.Unmarshal(data, &input)
+
+	// Then
+	if err != nil {
+		t.Fatalf("Then decode stop input: %v", err)
+	}
+	if !input.StopHookActive {
+		t.Fatal("Then stop_hook_active must be represented as true")
+	}
+}
+
 func Test_Run_stop_warns_for_invalid_present_suggestion(t *testing.T) {
 	// Given
 	fixtures := []string{
