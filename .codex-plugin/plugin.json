@@ -1,7 +1,7 @@
 {
   "name": "codex-next-prompt",
-  "version": "0.1.0",
-  "description": "Adds one concise suggested next prompt to suitable Codex responses.",
+  "version": "0.2.0",
+  "description": "Provides the explicit $next skill for generating a ready-to-send next prompt from the current conversation.",
   "author": {
     "name": "Rocky"
   },
@@ -11,6 +11,8 @@
   "keywords": [
     "codex",
     "prompt",
-    "hooks"
-  ]
+    "skill",
+    "productivity"
+  ],
+  "skills": "./skills/"
 }

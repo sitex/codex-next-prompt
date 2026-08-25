@@ -1,0 +1,7 @@
+interface:
+  display_name: "Next"
+  short_description: "Generate a ready-to-send next prompt"
+  default_prompt: "Use $next to generate the next ready-to-send prompt from this conversation."
+
+policy:
+  allow_implicit_invocation: false
