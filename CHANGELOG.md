@@ -22,6 +22,8 @@ All notable changes to this project will be documented in this file.
   trusted hooks run, suitable replies get a suggestion, exact `OK` output stays
   unchanged, and the stop hook completes. Windows remains CI smoke coverage;
   native macOS execution hasn't been tested locally.
+- Add a checksum-gated LLM installation procedure with a ready-to-use README
+  prompt and mandatory interactive hook review.
 - Harden release builds for linked worktrees, verify signed tags against the
   workflow commit, smoke extracted archives on native runners, and refuse to
   replace existing release assets.

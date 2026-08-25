@@ -42,6 +42,23 @@ codex plugin list --available
 codex plugin add codex-next-prompt@codex-next-prompt
 ```
 
+### Install with an LLM
+
+Give your coding agent this prompt:
+
+```text
+Install Codex Next Prompt by following the instructions at:
+https://raw.githubusercontent.com/sitex/codex-next-prompt/main/INSTALL_WITH_LLM.md
+
+Follow the checksum and hook-trust safety requirements exactly. Do not install
+from source, do not bypass hook trust, and stop if no published release exists.
+```
+
+The machine-oriented procedure is also available as
+[INSTALL_WITH_LLM.md](INSTALL_WITH_LLM.md). The LLM can download, verify, and
+register the plugin, but the user must review and trust the hooks interactively
+through `/hooks`.
+
 Keep the extracted directory in place while the marketplace and plugin are
 installed. Start a new Codex session, open `/hooks`, review the `SessionStart`
 and `Stop` commands and their local paths, and trust them only after confirming
