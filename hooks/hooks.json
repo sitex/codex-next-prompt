@@ -1,0 +1,30 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/hooks/run session-start",
+            "commandWindows": "cmd.exe /d /s /c \"\"%PLUGIN_ROOT%\\hooks\\run.cmd\" session-start\"",
+            "timeout": 5,
+            "statusMessage": "Loading next-prompt guidance"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${PLUGIN_ROOT}/hooks/run stop",
+            "commandWindows": "cmd.exe /d /s /c \"\"%PLUGIN_ROOT%\\hooks\\run.cmd\" stop\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

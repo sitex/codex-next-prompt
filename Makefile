@@ -17,7 +17,8 @@ test:
 	go test -race -shuffle=on -count=1 ./...
 
 build:
-	go build ./cmd/...
+	mkdir -p bin
+	go build -o bin/codex-next-prompt ./cmd/codex-next-prompt
 
 smoke:
 	@test -x tests/smoke-posix.sh || { printf '%s\n' 'smoke: tests/smoke-posix.sh is not available' >&2; exit 1; }
@@ -32,6 +33,7 @@ check:
 	@test -z "$$(gofmt -l $(GO_FILES))" || { printf '%s\n' 'check: Go files are not formatted' >&2; exit 1; }
 	go vet ./...
 	go test -race -shuffle=on -count=1 ./...
-	go build ./cmd/...
+	mkdir -p bin
+	go build -o bin/codex-next-prompt ./cmd/codex-next-prompt
 	test -x tests/smoke-posix.sh || { printf '%s\n' 'check: tests/smoke-posix.sh is not available' >&2; exit 1; }
 	tests/smoke-posix.sh
