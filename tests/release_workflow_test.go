@@ -20,9 +20,8 @@ func Test_ReleaseWorkflow_publishes_verified_native_smoked_tag_artifacts(t *test
 	requiredTokens := []string{
 		"permissions:\n  contents: read",
 		"publish:\n    name: Publish immutable GitHub release\n    permissions:\n      contents: write",
-		"gpg --batch --import RELEASE_SIGNING_KEY.asc",
+		"scripts/verify-release-tag.sh RELEASE_SIGNING_KEY.asc \"$GITHUB_REF_NAME\"",
 		"BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77",
-		"git verify-tag \"$GITHUB_REF_NAME\"",
 		"git fetch --no-tags origin main",
 		"git merge-base --is-ancestor \"$tag_commit\" origin/main",
 		"git rev-list -n 1 \"$GITHUB_REF_NAME\"",
@@ -52,6 +51,34 @@ func Test_ReleaseWorkflow_publishes_verified_native_smoked_tag_artifacts(t *test
 	for _, token := range forbiddenTokens {
 		if strings.Contains(workflow, token) {
 			t.Errorf("Then release workflow must omit structural token %q", token)
+		}
+	}
+}
+
+func Test_ReleaseTagVerifier_binds_single_VALID_SIGNATURE_to_expected_primary_key(t *testing.T) {
+	// Given
+	scriptPath := filepath.Join("..", "scripts", "verify-release-tag.sh")
+	data, err := os.ReadFile(scriptPath)
+	if err != nil {
+		t.Fatalf("Given read release tag verifier: %v", err)
+	}
+	script := string(data)
+
+	// When
+	requiredTokens := []string{
+		"mktemp -d",
+		"gpg --batch --with-colons --show-keys --fingerprint",
+		"${#primary_fingerprints[@]} -ne 1",
+		"git verify-tag --raw",
+		"$2 == \"VALIDSIG\" {print $NF}",
+		"${#valid_primary_fingerprints[@]} -ne 1",
+		"${valid_primary_fingerprints[0]} != \"$expected_primary_fingerprint\"",
+	}
+
+	// Then
+	for _, token := range requiredTokens {
+		if !strings.Contains(script, token) {
+			t.Errorf("Then release verifier must contain structural token %q", token)
 		}
 	}
 }

@@ -30,7 +30,8 @@ and be signed by the public key in
 [`RELEASE_SIGNING_KEY.asc`](RELEASE_SIGNING_KEY.asc), fingerprint
 `BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77`. Public key rotation requires a
 reviewed code change that updates the key and expected fingerprint together.
-Never commit a private signing key.
+The committed key bundle must contain exactly one primary key. Never commit a
+private signing key.
 
 ## Pull Requests
 

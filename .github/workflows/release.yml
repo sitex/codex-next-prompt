@@ -25,12 +25,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git cat-file -t "$GITHUB_REF_NAME")" = tag
-          export GNUPGHOME="$RUNNER_TEMP/release-gnupg"
-          mkdir -m 700 "$GNUPGHOME"
-          gpg --batch --import RELEASE_SIGNING_KEY.asc
-          imported_fingerprint=$(gpg --batch --with-colons --fingerprint | awk -F: '$1 == "fpr" {print $10; exit}')
-          test "$imported_fingerprint" = BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77
-          git verify-tag "$GITHUB_REF_NAME"
+          scripts/verify-release-tag.sh RELEASE_SIGNING_KEY.asc "$GITHUB_REF_NAME" BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77
           tag_commit=$(git rev-list -n 1 "$GITHUB_REF_NAME")
           test "$tag_commit" = "$GITHUB_SHA"
           git fetch --no-tags origin main:refs/remotes/origin/main

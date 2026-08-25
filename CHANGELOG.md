@@ -32,3 +32,5 @@ All notable changes to this project will be documented in this file.
   action pins, repository-provisioned tag verification, main-branch ancestry
   checks, status-aware release lookup, bounded hook input, quoted plugin paths,
   and archive extraction preflight.
+- Bind release verification to the tag signature's approved primary fingerprint
+  and reject committed signing-key bundles containing additional primary keys.
