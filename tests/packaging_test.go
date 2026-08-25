@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -112,7 +113,7 @@ func Test_HookLaunchers_are_present_and_posix_launcher_is_executable(t *testing.
 			if err != nil {
 				t.Fatalf("Then launcher %q must exist: %v", launcherPath, err)
 			}
-			if filepath.Base(launcherPath) == "run" && info.Mode().Perm()&0o111 == 0 {
+			if runtime.GOOS != "windows" && filepath.Base(launcherPath) == "run" && info.Mode().Perm()&0o111 == 0 {
 				t.Errorf("Then POSIX launcher mode = %o, want executable", info.Mode().Perm())
 			}
 		})
