@@ -16,6 +16,23 @@ or safety refusal, or while a question is waiting for user-provided data.
 Exact-output suppression has been verified against a response required to be
 exactly `OK`: the plugin left the output unchanged.
 
+## Usage Example
+
+Start a new Codex session and send:
+
+```text
+Explain why focused tests are useful after changing code and recommend what to do next.
+```
+
+The response should finish with one relevant line similar to:
+
+```text
+Suggested next prompt: Run the focused tests for my changed module and explain any failures.
+```
+
+The wording is model-generated and can vary. See [EXAMPLES.md](EXAMPLES.md) for
+exact-output suppression, waiting-for-input behavior, and troubleshooting.
+
 ## Install
 
 Codex `0.149.1` or newer is required. The source repository does not contain
