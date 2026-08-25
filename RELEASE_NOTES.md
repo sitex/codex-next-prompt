@@ -1,39 +1,37 @@
 # Codex Next Prompt 0.2.0
 
-Version 0.2.0 replaces the automatic response behavior with one explicit,
-skill-only action. Invoke `$next` to generate ready-to-send prompt text from the
-current conversation. The skill never executes its result.
+Version 0.2.0 distributes `$next` as a standalone skill for the current user. It generates
+ready-to-send prompt text from the current conversation and never executes its
+result.
 
-## Breaking Migration
+## Install
 
-Remove the previous plugin and marketplace registration before installing
-0.2.0. Delete the old extracted release directory only after checking its exact
-path, then install the new package from a clean directory. Existing automatic
-response behavior doesn't carry forward.
-
-## Package
-
-Every release has one portable asset and one checksum:
+Recommended: use `$skill-installer` with:
 
 ```text
-codex-next-prompt-0.2.0.zip
-codex-next-prompt-0.2.0.zip.sha256
+https://github.com/sitex/codex-next-prompt/tree/main/skills/next
 ```
 
-Verify SHA-256, inspect the ZIP paths, extract the single release root, register
-that root as a local marketplace, install the plugin, and restart Codex. See
-[INSTALL_WITH_LLM.md](INSTALL_WITH_LLM.md) for the safe procedure.
+For a manual release install, verify the ZIP checksum, extract it, and copy the
+extracted `next` directory to `$CODEX_HOME/skills/next` (default
+`$HOME/.codex/skills/next`). The archive contains exactly:
+
+```text
+codex-next-prompt-0.2.0/next/SKILL.md
+codex-next-prompt-0.2.0/next/agents/openai.yaml
+```
+
+Remove the experimental 0.1 plugin and local marketplace registration before the
+standalone install. Start a new session and verify with
+`codex debug prompt-input '$next'` or by sending `$next`.
 
 ## Contract
 
-- `$next` is the canonical and explicit invocation.
-- Input comes only from the current conversation.
-- Output is one default prompt, or two to three prompts for a real fork.
-- Missing context produces a request for context, not invented values.
-- Output follows the conversation's language.
-- The package contains instructions and metadata only.
-- There is no automatic invocation, executable runtime, network access,
-  persistence, conversation-record access, model API call, or prompt execution.
+- Explicit `$next` invocation only.
+- One default prompt; two or three only for a real fork.
+- Current conversation context only.
+- No hooks, automatic invocation, executable runtime, network access,
+  persistence, transcript access, model API call, or prompt execution.
 
-Release tags remain annotated, signed, and checked against the approved public
-key before the single ZIP is published.
+The release remains one deterministic ZIP plus one SHA-256 file. Its annotated
+tag is signed and verified against the approved public key before publication.

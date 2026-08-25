@@ -6,7 +6,6 @@
 # How to run: python3 scripts/package_release.py VERSION
 
 import hashlib
-import json
 import os
 import re
 import stat
@@ -26,10 +25,8 @@ SEMVER: Final = re.compile(
     r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$"
 )
 PAYLOAD: Final = (
-    Path(".agents/plugins/marketplace.json"),
-    Path(".codex-plugin/plugin.json"),
-    Path("skills/next/SKILL.md"),
-    Path("skills/next/agents/openai.yaml"),
+    (Path("skills/next/SKILL.md"), Path("next/SKILL.md")),
+    (Path("skills/next/agents/openai.yaml"), Path("next/agents/openai.yaml")),
 )
 ZIP_TIMESTAMP: Final = (1980, 1, 1, 0, 0, 0)
 FILE_MODE: Final = stat.S_IFREG | 0o644
@@ -49,17 +46,16 @@ def parse_version(raw_version: str) -> Version:
     return Version(raw_version)
 
 
-def read_manifest_version(root: Path) -> Version:
-    manifest_path = root / ".codex-plugin" / "plugin.json"
-    ensure_payload_file(root, manifest_path)
+def read_source_version(root: Path) -> Version:
+    version_path = root / "VERSION"
+    ensure_payload_file(root, version_path)
     try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        raw_version = manifest["version"]
-    except (json.JSONDecodeError, KeyError, UnicodeDecodeError) as error:
-        raise PackageError("plugin manifest must contain a valid version") from error
-    if not isinstance(raw_version, str):
-        raise PackageError("plugin manifest version must be a string")
-    return parse_version(raw_version)
+        raw_version = version_path.read_text(encoding="ascii")
+    except UnicodeDecodeError as error:
+        raise PackageError("VERSION must contain an ASCII semantic version") from error
+    if raw_version != raw_version.strip() + "\n":
+        raise PackageError("VERSION must contain one semantic version followed by a newline")
+    return parse_version(raw_version.strip())
 
 
 def ensure_payload_file(root: Path, path: Path) -> None:
@@ -76,14 +72,14 @@ def ensure_payload_file(root: Path, path: Path) -> None:
 
 
 def package_release(root: Path, output_dir: Path, version: Version) -> tuple[Path, Path]:
-    manifest_version = read_manifest_version(root)
-    if manifest_version != version:
+    source_version = read_source_version(root)
+    if source_version != version:
         raise PackageError(
-            f"version argument {version} does not match plugin manifest {manifest_version}"
+            f"version argument {version} does not match VERSION {source_version}"
         )
 
-    files = tuple((relative_path, root / relative_path) for relative_path in PAYLOAD)
-    for _relative_path, source_path in files:
+    files = tuple((source_path, archive_path, root / source_path) for source_path, archive_path in PAYLOAD)
+    for _source_path, _archive_path, source_path in files:
         ensure_payload_file(root, source_path)
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -95,8 +91,8 @@ def package_release(root: Path, output_dir: Path, version: Version) -> tuple[Pat
         temporary_archive = Path(temporary.name)
     try:
         with zipfile.ZipFile(temporary_archive, "w") as archive:
-            for relative_path, source_path in files:
-                info = zipfile.ZipInfo(f"{release_name}/{relative_path.as_posix()}", ZIP_TIMESTAMP)
+            for _source_relative, archive_relative, source_path in files:
+                info = zipfile.ZipInfo(f"{release_name}/{archive_relative.as_posix()}", ZIP_TIMESTAMP)
                 info.compress_type = zipfile.ZIP_STORED
                 info.create_system = 3
                 info.external_attr = FILE_MODE << 16

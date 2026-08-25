@@ -16,6 +16,8 @@ REMOVED_PATHS: Final = (
     "testdata/",
 )
 REMOVED_FILES: Final = {
+    ".agents/plugins/marketplace.json",
+    ".codex-plugin/plugin.json",
     "go.mod",
     "scripts/package-release.sh",
     "tests/archive_smoke_test.go",
@@ -41,8 +43,17 @@ CURRENT_DOCUMENTS: Final = (
     ".github/pull_request_template.md",
 )
 REMOVED_DOCUMENTATION_TERMS: Final = (
-    "/next",
     "/hooks",
+    "invoke `/next`",
+    "`/next` command",
+    "`/next` invocation",
+    "codex plugin add",
+    "codex plugin list",
+    "codex plugin marketplace add",
+    "codex plugin marketplace list",
+    "plugin is enabled",
+    "plugin metadata",
+    "skill-only plugin",
     "Suggested next prompt:",
     "SessionStart",
     "Stop hook",
@@ -124,15 +135,10 @@ class TestRepositoryContract(unittest.TestCase):
         self.assertNotIn("-----BEGIN PGP PRIVATE KEY BLOCK-----", key)
         self.assertNotIn("-----BEGIN PGP SECRET KEY BLOCK-----", key)
 
-    def test_manifest_exposes_only_v02_skills_when_runtime_is_removed(self) -> None:
-        manifest = json.loads(
-            (ROOT / ".codex-plugin" / "plugin.json").read_text(encoding="utf-8")
-        )
+    def test_version_file_is_authoritative_for_v02_release(self) -> None:
+        version = (ROOT / "VERSION").read_text(encoding="ascii")
 
-        self.assertEqual(manifest.get("version"), "0.2.0")
-        self.assertEqual(manifest.get("skills"), "./skills/")
-        for forbidden_field in ("hooks", "mcpServers", "apps"):
-            self.assertNotIn(forbidden_field, manifest)
+        self.assertEqual(version, "0.2.0\n")
 
     def test_current_docs_route_only_to_explicit_v02_next_skill(self) -> None:
         violations: list[str] = []
@@ -143,6 +149,8 @@ class TestRepositoryContract(unittest.TestCase):
                 violations.append(f"{path}: missing current version 0.2.0")
             if "$next" not in document:
                 violations.append(f"{path}: missing canonical $next invocation")
+            if "standalone skill" not in document.lower():
+                violations.append(f"{path}: missing standalone skill contract")
             if "0.1.0" in document:
                 violations.append(f"{path}: v0.1 history belongs in CHANGELOG.md")
             for term in REMOVED_DOCUMENTATION_TERMS:
@@ -178,6 +186,8 @@ class TestRepositoryContract(unittest.TestCase):
             self.assertIn(target, makefile)
         self.assertIn("python3 -m unittest discover", makefile)
         self.assertIn("python3 scripts/package_release.py", makefile)
+        self.assertIn("VERSION := $(shell cat VERSION)", makefile)
+        self.assertNotIn(".codex-plugin", makefile)
         self.assertIn("__pycache__", makefile)
         self.assertNotIn("go ", makefile.lower())
 

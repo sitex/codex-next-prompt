@@ -2,7 +2,7 @@ SHELL := /bin/sh
 
 .DEFAULT_GOAL := check
 
-VERSION ?= $(shell sed -n 's/^[[:space:]]*"version": "\([^"]*\)",*$$/\1/p' .codex-plugin/plugin.json)
+VERSION := $(shell cat VERSION)
 
 .PHONY: test package check clean
 

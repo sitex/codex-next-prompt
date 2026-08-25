@@ -2,13 +2,13 @@
 
 ## Supported Versions
 
-Only the latest published version receives security fixes. The current public
-action is explicit `$next` invocation.
+Only the latest published version receives security fixes. Version 0.2.0 is a
+standalone skill whose public action is explicit `$next` invocation.
 
 ## Threat Surface
 
-Codex Next Prompt is instruction-only. The release contains plugin metadata and
-skill text, with no executable runtime. `$next` receives only the current
+Codex Next Prompt is instruction-only. The release contains only `next/SKILL.md`
+and `next/agents/openai.yaml`, with no executable runtime. `$next` receives only the current
 conversation context and returns prompt text. It doesn't execute the result.
 
 Security reports are especially relevant if the package gains unexpected

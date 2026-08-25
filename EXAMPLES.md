@@ -1,6 +1,6 @@
 # `$next` Examples
 
-These examples describe Codex Next Prompt 0.2.0. Invoke `$next` explicitly. Each
+These examples describe the Codex Next Prompt 0.2.0 standalone skill. Invoke `$next` explicitly. Each
 result is ready-to-send prompt text, and none of the results are executed by the
 skill.
 
@@ -27,9 +27,15 @@ asynchronous boundary, and the choice changes the public interface.
 
 Output:
 
+1. **Keep the synchronous interface**
+
 ```text
 Keep the public API synchronous, implement the new call through the existing client, and add focused contract tests for the new behavior.
+```
 
+2. **Introduce an asynchronous boundary**
+
+```text
 Change the public API to an asynchronous boundary, document the compatibility impact, and add focused tests for cancellation and errors.
 ```
 

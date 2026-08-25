@@ -1,6 +1,6 @@
 ---
 name: next
-description: Use when the user explicitly invokes $next to request a ready-to-send next prompt from the current conversation. Never execute the proposed prompt.
+description: Use when the user explicitly invokes $next and wants a ready-to-send next prompt from the current conversation.
 ---
 
 # Next
@@ -24,6 +24,11 @@ conversation context already available in this turn.
     <forks>real-only</forks>
   </recommendations>
   <language>same-as-user</language>
+  <output>
+    <format>fenced-text</format>
+    <commentary>forbidden</commentary>
+    <placeholders>forbidden</placeholders>
+  </output>
   <custom-slash-command>none</custom-slash-command>
   <automatic-footer>forbidden</automatic-footer>
 </next-skill-contract>

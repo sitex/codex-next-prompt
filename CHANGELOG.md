@@ -4,7 +4,12 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
-- No changes yet.
+- Pivot the 0.2.0 distribution from a non-discoverable plugin package to a
+  standalone user skill.
+- Remove the plugin manifest and local marketplace metadata.
+- Package exactly `next/SKILL.md` and `next/agents/openai.yaml` in one
+  deterministic ZIP.
+- Add `$skill-installer` and `$CODEX_HOME/skills/next` installation paths.
 
 ## [0.2.0] - 2026-08-26
 
@@ -12,10 +17,10 @@ All notable changes to this project are documented here.
 
 - Replace automatic response suggestions with the explicit `$next` skill.
 - Remove the executable runtime and all automatic invocation behavior.
-- Replace platform-specific packages with one portable ZIP and matching SHA-256
-  file.
-- Require removal of the previous plugin and marketplace registration before a
-  clean 0.2.0 install.
+- Replace platform-specific packages with one portable standalone skill ZIP and
+  matching SHA-256 file.
+- Require removal of the 0.1 plugin and marketplace registration before a clean
+  0.2.0 standalone install.
 
 ### Added
 

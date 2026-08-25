@@ -1,6 +1,6 @@
 # Project Instructions for 0.2.0
 
-- Keep this repository skill-only. Don't add executable runtime code, native
+- Keep this repository a standalone skill distribution. Don't add executable runtime code, native
   launchers, MCP servers, apps, or automatic invocation surfaces.
 - Keep the `$next` skill local-only, offline, and standard-library-only.
 - Use only the current conversation context. Don't read conversation records or
@@ -15,4 +15,6 @@
   `make check`. Don't hide failures or silently skip gates.
 - Keep credentials, private signing keys, user data, generated packages, release
   ZIP files, and local planning artifacts out of the repository.
+- Keep the release payload exact: `next/SKILL.md` and
+  `next/agents/openai.yaml`, with version 0.2.0 sourced from `VERSION`.
 - Stage explicit paths only when preparing a commit. Don't use broad staging.

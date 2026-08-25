@@ -1,5 +1,4 @@
 import hashlib
-import json
 import os
 import subprocess
 import tempfile
@@ -14,20 +13,14 @@ PACKAGER: Final = ROOT / "scripts" / "package_release.py"
 VERSION: Final = "1.2.3"
 ARCHIVE_NAME: Final = f"codex-next-prompt-{VERSION}.zip"
 PAYLOAD: Final = (
-    ".agents/plugins/marketplace.json",
-    ".codex-plugin/plugin.json",
-    "skills/next/SKILL.md",
-    "skills/next/agents/openai.yaml",
+    "next/SKILL.md",
+    "next/agents/openai.yaml",
 )
 
 
 def create_source(root: Path, version: str = VERSION) -> None:
     files = {
-        ".agents/plugins/marketplace.json": '{"name":"codex-next-prompt"}\n',
-        ".codex-plugin/plugin.json": json.dumps(
-            {"name": "codex-next-prompt", "version": version, "skills": "./skills/"}
-        )
-        + "\n",
+        "VERSION": f"{version}\n",
         "skills/next/SKILL.md": "---\nname: next\n---\n\n# Next\n",
         "skills/next/agents/openai.yaml": "policy:\n  allow_implicit_invocation: false\n",
     }
@@ -82,7 +75,7 @@ class TestPackageRelease(unittest.TestCase):
             checksum = (first_output / f"{ARCHIVE_NAME}.sha256").read_text(encoding="ascii")
             self.assertEqual(checksum, f"{digest}  {ARCHIVE_NAME}\n")
 
-    def test_package_rejects_invalid_version_and_manifest_mismatch(self) -> None:
+    def test_package_rejects_invalid_version_and_source_version_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             workspace = Path(temporary)
             source = workspace / "source"
@@ -92,6 +85,29 @@ class TestPackageRelease(unittest.TestCase):
                 with self.subTest(version=version):
                     result = run_packager(source, workspace / version.replace("/", "_"), version)
                     self.assertNotEqual(result.returncode, 0)
+
+    def test_package_rejects_missing_empty_and_symlink_source_version(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+
+            for condition in ("missing", "empty", "symlink"):
+                with self.subTest(condition=condition):
+                    source = workspace / condition
+                    create_source(source)
+                    target = source / "VERSION"
+                    if condition == "missing":
+                        target.unlink()
+                    elif condition == "empty":
+                        target.write_bytes(b"")
+                    else:
+                        replacement = source / "replacement-version"
+                        replacement.write_text(f"{VERSION}\n", encoding="ascii")
+                        target.unlink()
+                        target.symlink_to(replacement)
+
+                    result = run_packager(source, workspace / f"version-{condition}")
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertFalse((workspace / f"version-{condition}" / ARCHIVE_NAME).exists())
 
     def test_package_rejects_missing_empty_and_symlink_payload(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -115,6 +131,20 @@ class TestPackageRelease(unittest.TestCase):
                     result = run_packager(source, workspace / f"dist-{condition}")
                     self.assertNotEqual(result.returncode, 0)
                     self.assertFalse((workspace / f"dist-{condition}" / ARCHIVE_NAME).exists())
+
+    def test_package_rejects_symlinked_payload_parent(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            source = workspace / "source"
+            create_source(source)
+            real_skills = workspace / "real-skills"
+            (source / "skills").rename(real_skills)
+            (source / "skills").symlink_to(real_skills, target_is_directory=True)
+
+            result = run_packager(source, workspace / "dist")
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse((workspace / "dist" / ARCHIVE_NAME).exists())
 
 
 if __name__ == "__main__":

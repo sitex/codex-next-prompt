@@ -1,6 +1,7 @@
 ## Summary
 
 Describe the user-visible or contributor-visible change for version 0.2.0.
+The product is a standalone skill invoked as `$next`.
 
 ## `$next` Contract
 
@@ -15,8 +16,10 @@ Describe the user-visible or contributor-visible change for version 0.2.0.
 
 - [ ] Added or updated a focused failing test before the implementation change.
 - [ ] Tests assert routing or repository contract terms, not prose snapshots.
-- [ ] Package changes keep one portable ZIP, checksum verification, and safe
-      archive paths.
+- [ ] Package changes keep one portable ZIP containing exactly `next/SKILL.md`
+      and `next/agents/openai.yaml`, checksum verification, and safe paths.
+- [ ] Installation remains available through `$skill-installer` or the manual
+      `$CODEX_HOME/skills/next` destination.
 - [ ] Contains no credentials, private keys, user data, generated ZIP files, or
       unrelated changes.
 

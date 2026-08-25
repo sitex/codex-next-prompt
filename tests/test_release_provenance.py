@@ -141,6 +141,7 @@ class TestReleaseWorkflow(unittest.TestCase):
             EXPECTED_FINGERPRINT,
             'test "$tag_commit" = "$GITHUB_SHA"',
             'git merge-base --is-ancestor "$tag_commit" origin/main',
+            'test "$(cat VERSION)" = "$version"',
             "python3 scripts/package_release.py \"$version\"",
             "gh api -i \"repos/$GITHUB_REPOSITORY/releases/tags/$GITHUB_REF_NAME\"",
             "dist/codex-next-prompt-${{ env.RELEASE_VERSION }}.zip",
@@ -154,6 +155,24 @@ class TestReleaseWorkflow(unittest.TestCase):
                 self.assertNotIn(token, workflow.lower())
         self.assertIn("publish:\n    permissions:\n      contents: write", workflow)
         self.assertEqual(workflow.count("contents: write"), 1)
+
+    def test_publish_checks_out_release_notes_before_creating_release(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+        publish = workflow.split("  publish:\n", 1)[1]
+
+        checkout = publish.find("uses: actions/checkout@")
+        publish_command = publish.find("gh release create")
+        self.assertGreaterEqual(checkout, 0)
+        self.assertGreater(publish_command, checkout)
+        self.assertIn("persist-credentials: false", publish[:publish_command])
+        self.assertIn("--notes-file RELEASE_NOTES.md", publish[publish_command:])
+
+    def test_package_checks_out_verified_event_sha(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+        package = workflow.split("  package:\n", 1)[1].split("  publish:\n", 1)[0]
+
+        self.assertIn("ref: ${{ github.sha }}", package)
+        self.assertIn("persist-credentials: false", package)
 
     def test_workflows_pin_actions_and_disable_checkout_credentials(self) -> None:
         for relative_path in (".github/workflows/ci.yml", ".github/workflows/release.yml"):

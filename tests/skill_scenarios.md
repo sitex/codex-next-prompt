@@ -1,6 +1,6 @@
 # Explicit `$next` Skill Scenario Matrix
 
-Phase 1 records behavioral cases for the v0.2 skill contract. These scenarios
+This matrix records behavioral cases for the v0.2.0 standalone skill contract. These scenarios
 are review fixtures, not executable prompt snapshots: wording may vary while the
 observable constraints remain fixed.
 
@@ -8,8 +8,8 @@ observable constraints remain fixed.
 | --- | --- | --- | --- | --- |
 | One clear continuation | The user has completed a focused code change and its verification result is in context. | The user sends `$next`. | Return one concrete next action based only on that context. | Running the action or calling a tool. |
 | Genuine two-way fork | The context supports either shipping the verified change or investigating a named residual risk. | The user sends `$next`. | Return two distinct options and identify the real fork. | Inventing a third option to fill a quota. |
-| More than three candidates | The context contains four plausible follow-ups with different value. | The user sends `$next`. | Rank and return at most three options. | Returning an exhaustive backlog. |
-| No meaningful continuation | The current exchange is complete and contains no grounded next action. | The user sends `$next`. | State concisely that no grounded next step is available. | Guessing work from outside the current context. |
+| More than three real paths | The context explicitly leaves four materially different, mutually exclusive paths unresolved. | The user sends `$next`. | Select and return at most three highest-value path prompts. | Returning an exhaustive backlog or cosmetic variants. |
+| No meaningful continuation | The current exchange is complete and contains no grounded next action. | The user sends `$next`. | Return one fenced prompt asking Codex to identify the goal and request only essential context. | A status statement, placeholders, or guessed work. |
 | Waiting on user input | The assistant previously asked for a required product decision or missing datum. | The user sends `$next` without supplying it. | Recommend providing the required input as the single next step. | Proceeding as though the missing decision were known. |
 | Non-English conversation | The current conversation is in Russian. | The user sends `$next`. | Return the recommendation in Russian. | Switching to English by default. |
 | Execution request attached | The user sends `$next and implement it`. | The skill is invoked. | Provide recommendations only and make no changes. | Editing files, running commands, or delegating execution. |

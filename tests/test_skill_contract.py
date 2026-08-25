@@ -1,4 +1,3 @@
-import json
 import unittest
 import xml.etree.ElementTree as element_tree
 from pathlib import Path
@@ -8,7 +7,6 @@ from typing import Final
 ROOT: Final = Path(__file__).resolve().parents[1]
 SKILL_PATH: Final = ROOT / "skills" / "next" / "SKILL.md"
 OPENAI_PATH: Final = ROOT / "skills" / "next" / "agents" / "openai.yaml"
-MANIFEST_PATH: Final = ROOT / ".codex-plugin" / "plugin.json"
 
 
 def parse_frontmatter(document: str) -> tuple[dict[str, str], str]:
@@ -86,13 +84,14 @@ class TestSkillContract(unittest.TestCase):
         self.assertTrue(SKILL_PATH.is_file(), f"missing {SKILL_PATH.relative_to(ROOT)}")
         self.assertTrue(OPENAI_PATH.is_file(), f"missing {OPENAI_PATH.relative_to(ROOT)}")
 
-    def test_frontmatter_routes_only_explicit_next_without_execution(self) -> None:
+    def test_frontmatter_routes_only_explicit_next(self) -> None:
         fields, _body = parse_frontmatter(read_required(SKILL_PATH))
 
         self.assertEqual(fields.get("name"), "next")
         description = fields.get("description", "").lower()
         self.assertIn("$next", description)
-        self.assertIn("never execute", description)
+        self.assertIn("current conversation", description)
+        self.assertNotIn("never execute", description)
 
     def test_openai_metadata_disables_implicit_invocation_and_dependencies(self) -> None:
         fields = parse_scalar_yaml(read_required(OPENAI_PATH))
@@ -102,16 +101,6 @@ class TestSkillContract(unittest.TestCase):
         self.assertTrue(fields.get("interface.default_prompt"))
         self.assertIs(fields.get("policy.allow_implicit_invocation"), False)
         self.assertFalse(any(path == "dependencies" or path.startswith("dependencies.") for path in fields))
-
-    def test_manifest_declares_v02_skill_only_package_surface(self) -> None:
-        manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-
-        with self.subTest(field="version"):
-            self.assertEqual(manifest.get("version"), "0.2.0")
-        with self.subTest(field="skills"):
-            self.assertEqual(manifest.get("skills"), "./skills/")
-        for forbidden_field in ("hooks", "mcpServers", "apps"):
-            self.assertNotIn(forbidden_field, manifest)
 
     def test_body_structurally_limits_inputs_and_side_effects(self) -> None:
         _fields, body = parse_frontmatter(read_required(SKILL_PATH))
@@ -140,6 +129,14 @@ class TestSkillContract(unittest.TestCase):
         self.assertEqual(contract.findtext("invocation"), "explicit-$next-only")
         self.assertEqual(contract.findtext("custom-slash-command"), "none")
         self.assertEqual(contract.findtext("automatic-footer"), "forbidden")
+
+    def test_body_defines_prompt_only_output_without_placeholders(self) -> None:
+        _fields, body = parse_frontmatter(read_required(SKILL_PATH))
+        contract = parse_contract(body)
+
+        self.assertEqual(contract.findtext("output/format"), "fenced-text")
+        self.assertEqual(contract.findtext("output/commentary"), "forbidden")
+        self.assertEqual(contract.findtext("output/placeholders"), "forbidden")
 
 
 if __name__ == "__main__":
