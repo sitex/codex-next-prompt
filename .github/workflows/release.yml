@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   verify:
-    name: Verify signed release source
     runs-on: ubuntu-latest
 
     steps:
@@ -20,165 +19,76 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Verify tag identity and version
+      - name: Verify signed release source
         shell: bash
         run: |
           set -euo pipefail
           git fetch --force --no-tags origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
-          if test "$(git cat-file -t "$GITHUB_REF_NAME")" != tag; then
-            printf '%s\n' "release ref is not an annotated tag: $GITHUB_REF_NAME" >&2
-            exit 1
-          fi
+          test "$(git cat-file -t "$GITHUB_REF_NAME")" = tag
           scripts/verify-release-tag.sh RELEASE_SIGNING_KEY.asc "$GITHUB_REF_NAME" BFA7D43C126EE54A5FC8DD0EBE645A3EFA752D77
           tag_commit=$(git rev-list -n 1 "$GITHUB_REF_NAME")
-          if test "$tag_commit" != "$GITHUB_SHA"; then
-            printf '%s\n' "tag commit $tag_commit does not match event SHA $GITHUB_SHA" >&2
-            exit 1
-          fi
+          test "$tag_commit" = "$GITHUB_SHA"
           git fetch --no-tags origin main:refs/remotes/origin/main
           git merge-base --is-ancestor "$tag_commit" origin/main
           version=${GITHUB_REF_NAME#v}
           test "$GITHUB_REF_NAME" = "v$version"
-          printf '%s\n' "$version" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?(\+[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?$'
-          printf 'RELEASE_VERSION=%s\n' "$version" >>"$GITHUB_ENV"
+          test "$(cat VERSION)" = "$version"
 
-      - name: Set up Go
-        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
-        with:
-          go-version: '1.25.x'
-          cache: false
-
-      - name: Run repository checks
-        run: make check
-
-      - name: Check repository cleanliness
-        shell: bash
-        run: |
-          set -euo pipefail
-          test ! -e go.sum
-          git diff --exit-code
-          test -z "$(git status --porcelain --untracked-files=all)"
+      - name: Run tests
+        run: make test
 
   package:
-    name: Package and smoke ${{ matrix.goos }}-${{ matrix.goarch }}
     needs: verify
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - goos: linux
-            goarch: amd64
-            runner: ubuntu-latest
-          - goos: linux
-            goarch: arm64
-            runner: ubuntu-24.04-arm
-          - goos: darwin
-            goarch: amd64
-            runner: macos-15-intel
-          - goos: darwin
-            goarch: arm64
-            runner: macos-latest
-          - goos: windows
-            goarch: amd64
-            runner: ubuntu-latest
-          - goos: windows
-            goarch: arm64
-            runner: ubuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out tagged source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          fetch-depth: 0
+          ref: ${{ github.sha }}
           persist-credentials: false
 
-      - name: Resolve release version
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.x'
+
+      - name: Package release
         shell: bash
         run: |
           set -euo pipefail
           version=${GITHUB_REF_NAME#v}
+          python3 scripts/package_release.py "$version"
           printf 'RELEASE_VERSION=%s\n' "$version" >>"$GITHUB_ENV"
 
-      - name: Set up Go
-        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
-        with:
-          go-version: '1.25.x'
-          cache: false
-
-      - name: Package target
-        shell: bash
-        env:
-          TARGET_GOOS: ${{ matrix.goos }}
-          TARGET_GOARCH: ${{ matrix.goarch }}
-        run: scripts/package-release.sh "$RELEASE_VERSION" "$TARGET_GOOS" "$TARGET_GOARCH"
-
-      - name: Upload tested target archive
+      - name: Upload exact release assets
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: release-${{ matrix.goos }}-${{ matrix.goarch }}
+          name: release-assets
           path: |
-            dist/*.tar.gz
-            dist/*.zip
-            dist/*.sha256
+            dist/codex-next-prompt-${{ env.RELEASE_VERSION }}.zip
+            dist/codex-next-prompt-${{ env.RELEASE_VERSION }}.zip.sha256
           if-no-files-found: error
           retention-days: 1
 
-  smoke-windows:
-    name: Smoke extracted Windows ${{ matrix.goarch }} archive
-    needs: package
-    if: always() && needs.package.result == 'success'
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - goarch: amd64
-            runner: windows-latest
-          - goarch: arm64
-            runner: windows-11-arm
-
-    steps:
-      - name: Check out smoke test
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          persist-credentials: false
-
-      - name: Download Windows archive
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
-        with:
-          name: release-windows-${{ matrix.goarch }}
-          path: dist
-
-      - name: Run extracted Windows launcher smoke
-        shell: pwsh
-        run: |
-          $archives = @(Get-ChildItem dist/*.zip -File)
-          if ($archives.Count -ne 1) {
-            throw "expected exactly one Windows release archive, found $($archives.Count)"
-          }
-          tests/smoke-windows.ps1 $archives[0].FullName
-
   publish:
-    name: Publish immutable GitHub release
     permissions:
       contents: write
-    needs: [package, smoke-windows]
-    if: always() && needs.package.result == 'success' && needs.smoke-windows.result == 'success'
+    needs: package
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out release notes
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          ref: ${{ github.sha }}
           persist-credentials: false
 
-      - name: Download tested release archives
+      - name: Download exact release assets
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
-          pattern: release-*
+          name: release-assets
           path: dist
-          merge-multiple: true
 
       - name: Refuse an existing release
         shell: bash
@@ -194,8 +104,7 @@ jobs:
           fi
           http_status=$(awk 'NR == 1 {print $2}' "$response")
           case "$http_status" in
-          404)
-            ;;
+          404) ;;
           200)
             printf '%s\n' "release already exists: $GITHUB_REF_NAME" >&2
             exit 1
@@ -206,8 +115,13 @@ jobs:
             ;;
           esac
 
-      - name: Publish release
+      - name: Publish exact release assets
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md
+        run: |
+          set -euo pipefail
+          version=${GITHUB_REF_NAME#v}
+          archive="dist/codex-next-prompt-${version}.zip"
+          checksum="${archive}.sha256"
+          gh release create "$GITHUB_REF_NAME" "$archive" "$checksum" --repo "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md

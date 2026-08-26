@@ -1,21 +1,42 @@
-# Codex Next Prompt
+# Codex Next Prompt 0.2.0
 
-This release packages Codex Next Prompt as a self-contained local marketplace
-for Linux, macOS, and Windows on `amd64` and `arm64`. Download the archive and
-matching `.sha256` file for one platform from the same release.
+Version 0.2.0 distributes `$next` as a standalone skill for the current user. It generates
+ready-to-send prompt text from the current conversation and never executes its
+result.
 
-## Compatibility
+## Install
 
-- Codex `0.149.1` or newer is required.
-- The extracted release directory must remain in place while its marketplace
-  and plugin are installed.
-- Release tags are annotated and signed; the release workflow verifies the tag
-  signature and exact source commit before packaging.
+Install only the release artifacts published from the signed v0.2.0 tag:
 
-## Limitations
+```text
+codex-next-prompt-0.2.0.zip
+codex-next-prompt-0.2.0.zip.sha256
+```
 
-- Suggestions are response-level text only, not composer insertion or prefill.
-- The plugin does not execute the suggested prompt or run tools on its behalf.
-- The plugin is local-only and has no network access, telemetry, persistence,
-  transcript reads, or external model call.
-- The static local marketplace does not provide remote update discovery.
+Verify the checksum, inspect and extract the ZIP, and copy the extracted `next`
+directory to `${CODEX_HOME:-$HOME/.codex}/skills/next`. Do not install from a
+GitHub source tree or mutable branch. The archive contains exactly:
+
+```text
+codex-next-prompt-0.2.0/next/SKILL.md
+```
+
+Remove the experimental 0.1 plugin and local marketplace registration before the
+standalone install. Start a new session and verify with
+`codex debug prompt-input '$next'` or by sending `$next`.
+
+## Contract
+
+- Explicit `$next` invocation only.
+- Description-driven frontmatter trigger when the user types `$next`.
+- One default prompt; two or three only for a real fork.
+- Current conversation context only.
+- No hooks, automatic invocation, executable runtime, network access,
+  persistence, transcript access, model API call, or prompt execution.
+
+Codex 0.149.1 must receive only `SKILL.md`: agent policy metadata that disables
+implicit invocation hides the skill from the explicit catalog in this version.
+The skill never adds an automatic footer.
+
+The release remains one deterministic ZIP plus one SHA-256 file. Its annotated
+tag is signed and verified against the approved public key before publication.

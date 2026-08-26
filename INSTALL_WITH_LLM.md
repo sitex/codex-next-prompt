@@ -1,149 +1,67 @@
-# Install Codex Next Prompt with an LLM
+# Install the 0.2.0 Standalone Skill with an LLM
 
-This document is written for an LLM or coding agent installing
-`sitex/codex-next-prompt` on behalf of a user.
+This procedure installs Codex Next Prompt as a standalone user skill. Its only
+invocation is explicit `$next`.
 
-## Safety Contract
+## Release Installation
 
-- Install only from a published GitHub Release. Do not build or install from the
-  source checkout.
-- Download the archive and its matching `.sha256` file from the same release.
-- Stop immediately if the checksum does not match.
-- Do not use `--dangerously-bypass-hook-trust`.
-- Do not approve or simulate `/hooks` trust for the user. The user must review
-  and trust the hooks interactively.
-- Keep the extracted release directory in place while its marketplace and
-  plugin are installed.
-- Do not request credentials, API keys, or network access beyond downloading
-  the public release and running the normal Codex model connection.
-
-## Installation Procedure
-
-### 1. Check prerequisites
-
-Run:
+1. Select the release published from the signed v0.2.0 tag and download exactly
+   `codex-next-prompt-0.2.0.zip` and its matching `.sha256` file.
+2. Run `sha256sum -c codex-next-prompt-0.2.0.zip.sha256`.
+3. Inspect the ZIP and reject absolute paths, parent traversal, symbolic links,
+   empty files, or any payload other than:
 
 ```text
-codex --version
+codex-next-prompt-0.2.0/next/SKILL.md
 ```
 
-Require Codex `0.149.1` or newer. If `codex` is unavailable or too old, explain
-the requirement and stop.
+4. Extract the ZIP only after the checks pass.
+5. Resolve the destination as `${CODEX_HOME:-$HOME/.codex}/skills/next`.
+6. Refuse to overwrite an existing destination without first identifying whether
+   it is an old installation and obtaining approval to replace that exact path.
+7. Copy the extracted `next` directory to the destination. The final file must
+   be `${CODEX_HOME:-$HOME/.codex}/skills/next/SKILL.md`.
+8. Start a new Codex session.
 
-### 2. Detect the platform
+Do not install from a GitHub source tree or mutable branch, build from source,
+request credentials, read conversation records, weaken a failed safety check,
+or change unrelated Codex settings.
 
-Select exactly one release target:
+## Migration from 0.1
 
-| Operating system | Architecture | Target |
-|---|---|---|
-| Linux | x86_64 / amd64 | `linux-amd64` |
-| Linux | arm64 / aarch64 | `linux-arm64` |
-| macOS | x86_64 / amd64 | `darwin-amd64` |
-| macOS | arm64 / Apple Silicon | `darwin-arm64` |
-| Windows | AMD64 / x86_64 | `windows-amd64` |
-| Windows | ARM64 | `windows-arm64` |
+The 0.1 release used an experimental plugin and local marketplace. Remove both
+old registrations before installing the 0.2.0 standalone skill. Delete an old
+extracted release or skill directory only after showing and validating its exact
+resolved path. Never delete a parent or wildcard path.
 
-If the operating system or architecture is not listed, report that it is
-unsupported and stop.
+## Codex 0.149.1 Compatibility
 
-### 3. Resolve a published release
+Install only `SKILL.md`. Runtime testing showed that agent policy metadata which
+disables implicit invocation hides the skill from the explicit catalog in Codex
+0.149.1. The supported trigger is description-driven: the user types `$next`, and
+the frontmatter description declares that explicit intent. There is no automatic
+footer.
 
-Query the latest GitHub Release for
-`https://github.com/sitex/codex-next-prompt` and obtain its tag/version. If no
-release exists, tell the user that installation cannot continue until a release
-is published. Do not fall back to the source repository.
+## Verification
 
-For version `VERSION` and target `TARGET`, the expected filenames are:
-
-- Linux/macOS: `codex-next-prompt-VERSION-TARGET.tar.gz`
-- Windows: `codex-next-prompt-VERSION-TARGET.zip`
-- Checksum: the archive filename plus `.sha256`
-
-### 4. Download and verify
-
-Create a stable user-selected installation directory, not a temporary directory
-that will be deleted automatically. Download the archive and checksum there.
-
-On Linux:
+Use either:
 
 ```sh
-sha256sum -c "ARCHIVE.sha256"
+codex debug prompt-input '$next'
 ```
 
-On macOS:
-
-```sh
-shasum -a 256 -c "ARCHIVE.sha256"
-```
-
-On Windows PowerShell, parse the expected hash from the checksum file and compare
-it with:
-
-```powershell
-(Get-FileHash -Algorithm SHA256 ARCHIVE).Hash
-```
-
-Comparison on Windows must be case-insensitive. If verification fails, delete
-the downloaded files, report the failure, and stop.
-
-### 5. Extract the archive
-
-Extract the archive into the stable installation directory. The extracted root
-is named `codex-next-prompt-VERSION` and contains a self-contained local
-marketplace.
-
-Do not move individual files out of this directory.
-
-### 6. Register and install
-
-Run these commands with the extracted root path:
+or start a new session and send:
 
 ```text
-codex plugin marketplace add "PATH_TO_EXTRACTED_ROOT"
-codex plugin marketplace list
-codex plugin list --available
-codex plugin add codex-next-prompt@codex-next-prompt
-codex plugin list
+$next
 ```
 
-Verify that `codex-next-prompt@codex-next-prompt` is installed and enabled. If
-any command fails, report the exact command and error. Do not bypass Codex
-security controls.
-
-### 7. Hand control back to the user
-
-Tell the user to:
-
-1. Start a new interactive Codex session.
-2. Open `/hooks`.
-3. Review the `SessionStart` and `Stop` commands and confirm they point inside
-   the checksum-verified release directory.
-4. Trust the hooks only if the paths and commands are correct.
-
-Do not claim installation is fully active until the user completes this review.
+The result must be ready-to-send prompt text based only on the current
+conversation. The skill must not execute it. There is no custom slash command,
+automatic invocation, or hook.
 
 ## Uninstall
 
-Run:
-
-```text
-codex plugin remove codex-next-prompt@codex-next-prompt
-codex plugin marketplace remove codex-next-prompt
-```
-
-After both commands succeed, the extracted release directory and downloaded
-archive may be removed.
-
-## Completion Report
-
-Report:
-
-- detected Codex version;
-- selected release version and target;
-- checksum result;
-- extracted marketplace path;
-- plugin list result;
-- that interactive `/hooks` review is still required.
-
-Never include authentication files, tokens, session transcripts, or unrelated
-Codex configuration in the report.
+Remove only `${CODEX_HOME:-$HOME/.codex}/skills/next`. Report the selected
+version, checksum result, inspected payload,
+destination path, restart status, and `$next` verification result.
