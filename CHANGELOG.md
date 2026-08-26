@@ -8,8 +8,9 @@ All notable changes to this project are documented here.
   standalone user skill.
 - Remove the plugin manifest and local marketplace metadata.
 - Package exactly `next/SKILL.md` in one deterministic ZIP.
-- Add the post-release immutable `$skill-installer` source and
-  `${CODEX_HOME:-$HOME/.codex}/skills/next` installation path.
+- Require checksum-verified release ZIP installation to
+  `${CODEX_HOME:-$HOME/.codex}/skills/next`; do not recommend GitHub source trees.
+- Pin the release publish checkout to the exact event commit SHA.
 - Remove agent policy metadata because Codex 0.149.1 hides the skill from the
   explicit catalog when implicit invocation is disabled.
 - Document description-driven activation when the user types `$next`.

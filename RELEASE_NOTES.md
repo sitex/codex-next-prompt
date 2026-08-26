@@ -6,15 +6,16 @@ result.
 
 ## Install
 
-After v0.2.0 is published, use `$skill-installer` with the immutable release tree:
+Install only the release artifacts published from the signed v0.2.0 tag:
 
 ```text
-https://github.com/sitex/codex-next-prompt/tree/v0.2.0/skills/next
+codex-next-prompt-0.2.0.zip
+codex-next-prompt-0.2.0.zip.sha256
 ```
 
-For a manual release install, verify the ZIP checksum, extract it, and copy the
-extracted `next` directory to `${CODEX_HOME:-$HOME/.codex}/skills/next`. The
-archive contains exactly:
+Verify the checksum, inspect and extract the ZIP, and copy the extracted `next`
+directory to `${CODEX_HOME:-$HOME/.codex}/skills/next`. Do not install from a
+GitHub source tree or mutable branch. The archive contains exactly:
 
 ```text
 codex-next-prompt-0.2.0/next/SKILL.md

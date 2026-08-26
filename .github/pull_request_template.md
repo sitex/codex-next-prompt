@@ -20,9 +20,9 @@ The product is a standalone skill invoked as `$next`.
       with checksum verification and safe paths.
 - [ ] Codex 0.149.1 discovery remains description-driven when the user types
       `$next`, with no agent policy metadata or automatic footer.
-- [ ] Installation remains available after release through `$skill-installer`
-      from `tree/v0.2.0/skills/next` or manually at
-      `${CODEX_HOME:-$HOME/.codex}/skills/next`.
+- [ ] Installation uses only `codex-next-prompt-0.2.0.zip` and
+      `codex-next-prompt-0.2.0.zip.sha256` from the signed release, copied to
+      `${CODEX_HOME:-$HOME/.codex}/skills/next`, with no GitHub source tree.
 - [ ] Contains no credentials, private keys, user data, generated ZIP files, or
       unrelated changes.
 

@@ -156,7 +156,7 @@ class TestReleaseWorkflow(unittest.TestCase):
         self.assertIn("publish:\n    permissions:\n      contents: write", workflow)
         self.assertEqual(workflow.count("contents: write"), 1)
 
-    def test_publish_checks_out_release_notes_before_creating_release(self) -> None:
+    def test_publish_checks_out_event_sha_before_creating_release(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
         publish = workflow.split("  publish:\n", 1)[1]
 
@@ -164,6 +164,7 @@ class TestReleaseWorkflow(unittest.TestCase):
         publish_command = publish.find("gh release create")
         self.assertGreaterEqual(checkout, 0)
         self.assertGreater(publish_command, checkout)
+        self.assertIn("ref: ${{ github.sha }}", publish[:publish_command])
         self.assertIn("persist-credentials: false", publish[:publish_command])
         self.assertIn("--notes-file RELEASE_NOTES.md", publish[publish_command:])
 

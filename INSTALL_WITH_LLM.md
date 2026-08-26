@@ -3,22 +3,9 @@
 This procedure installs Codex Next Prompt as a standalone user skill. Its only
 invocation is explicit `$next`.
 
-## Recommended Installation After Release
+## Release Installation
 
-After v0.2.0 is published, use `$skill-installer` with this immutable release
-tree:
-
-```text
-https://github.com/sitex/codex-next-prompt/tree/v0.2.0/skills/next
-```
-
-Ask it to install the `next` skill to
-`${CODEX_HOME:-$HOME/.codex}/skills/next`, then start a new session. Do not
-install from mutable `main`.
-
-## Manual Release Installation
-
-1. Select release 0.2.0 and download exactly
+1. Select the release published from the signed v0.2.0 tag and download exactly
    `codex-next-prompt-0.2.0.zip` and its matching `.sha256` file.
 2. Run `sha256sum -c codex-next-prompt-0.2.0.zip.sha256`.
 3. Inspect the ZIP and reject absolute paths, parent traversal, symbolic links,
@@ -36,8 +23,9 @@ codex-next-prompt-0.2.0/next/SKILL.md
    be `${CODEX_HOME:-$HOME/.codex}/skills/next/SKILL.md`.
 8. Start a new Codex session.
 
-Do not build from source, request credentials, read conversation records, weaken
-a failed safety check, or change unrelated Codex settings.
+Do not install from a GitHub source tree or mutable branch, build from source,
+request credentials, read conversation records, weaken a failed safety check,
+or change unrelated Codex settings.
 
 ## Migration from 0.1
 

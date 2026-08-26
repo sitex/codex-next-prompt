@@ -46,6 +46,13 @@ CURRENT_DOCUMENTS: Final = (
     ".github/ISSUE_TEMPLATE/bug_report.md",
     ".github/ISSUE_TEMPLATE/feature_request.md",
 )
+INSTALL_POLICY_DOCUMENTS: Final = (
+    "README.md",
+    "INSTALL_WITH_LLM.md",
+    "RELEASE_NOTES.md",
+    "CONTRIBUTING.md",
+    ".github/pull_request_template.md",
+)
 REMOVED_DOCUMENTATION_TERMS: Final = (
     "/hooks",
     "invoke `/next`",
@@ -75,6 +82,9 @@ REMOVED_DOCUMENTATION_TERMS: Final = (
     FORBIDDEN_METADATA_PATH,
     FORBIDDEN_POLICY,
     "tree/main/skills/next",
+    "tree/v0.2.0",
+    "/tree/",
+    "$skill-installer",
     "custom prompt",
     "plugin marketplace",
 )
@@ -170,6 +180,21 @@ class TestRepositoryContract(unittest.TestCase):
         for required_term in ("[Unreleased]", "[0.2.0]", "[0.1.0]", "$next"):
             if required_term not in changelog:
                 violations.append(f"CHANGELOG.md: missing {required_term!r}")
+
+        self.assertEqual(violations, [])
+
+    def test_current_install_docs_require_verified_release_zip_only(self) -> None:
+        violations: list[str] = []
+
+        for path in INSTALL_POLICY_DOCUMENTS:
+            document = (ROOT / path).read_text(encoding="utf-8")
+            for required_term in (
+                "codex-next-prompt-0.2.0.zip",
+                "codex-next-prompt-0.2.0.zip.sha256",
+                "${CODEX_HOME:-$HOME/.codex}/skills/next",
+            ):
+                if required_term not in document:
+                    violations.append(f"{path}: missing {required_term!r}")
 
         self.assertEqual(violations, [])
 

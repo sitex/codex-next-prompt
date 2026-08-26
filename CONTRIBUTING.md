@@ -41,10 +41,11 @@ ignored errors, or a weaker assertion.
 
 Update current documentation and `CHANGELOG.md` when the public contract changes.
 Examples must show explicit `$next` use and must not imply that the skill performs
-the recommended action. Installation changes must preserve `$skill-installer`
-from the immutable `tree/v0.2.0/skills/next` path after release, the manual
+the recommended action. Installation changes must preserve release-only delivery
+through `codex-next-prompt-0.2.0.zip` and
+`codex-next-prompt-0.2.0.zip.sha256`, the
 `${CODEX_HOME:-$HOME/.codex}/skills/next` destination, checksum verification, and
-safe ZIP path inspection.
+safe ZIP path inspection. Do not recommend a GitHub source tree or mutable branch.
 
 ## Release
 

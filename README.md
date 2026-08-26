@@ -26,21 +26,8 @@ See [EXAMPLES.md](EXAMPLES.md) for more scenarios.
 
 ## Install 0.2.0
 
-### Recommended after release: `$skill-installer`
-
-After v0.2.0 is published, ask `$skill-installer` to install the skill from this
-immutable release tree:
-
-```text
-https://github.com/sitex/codex-next-prompt/tree/v0.2.0/skills/next
-```
-
-Do not install from mutable `main`. Install to
-`${CODEX_HOME:-$HOME/.codex}/skills/next`, then start a new Codex session.
-
-### Manual: release ZIP
-
-Download both assets from the
+Install only from the release ZIP published from the signed v0.2.0 tag. Download
+both assets from the
 [v0.2.0 release](https://github.com/sitex/codex-next-prompt/releases/tag/v0.2.0):
 
 ```text
@@ -55,6 +42,8 @@ sha256sum -c codex-next-prompt-0.2.0.zip.sha256
 python3 -m zipfile -l codex-next-prompt-0.2.0.zip
 python3 -m zipfile -e codex-next-prompt-0.2.0.zip .
 ```
+
+Do not install from a GitHub source tree or mutable branch.
 
 The ZIP contains exactly:
 
